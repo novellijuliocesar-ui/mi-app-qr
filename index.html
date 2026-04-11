@@ -138,7 +138,6 @@
             background: #f8f9fa;
         }
 
-        /* Vista previa de la tarjeta */
         .preview-container {
             background: white;
             border-radius: 20px;
@@ -281,36 +280,16 @@
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 12px;
-            }
-            
-            .preview-card {
-                max-width: 280px;
-            }
-            
-            .preview-qr canvas {
-                width: 150px;
-                height: 150px;
-            }
-            
-            .preview-number {
-                font-size: 16px;
-            }
-            
-            .preview-code {
-                font-size: 11px;
-            }
+            body { padding: 12px; }
+            .preview-card { max-width: 280px; }
+            .preview-qr canvas { width: 150px; height: 150px; }
+            .preview-number { font-size: 16px; }
+            .preview-code { font-size: 11px; }
         }
 
         @media (min-width: 768px) {
-            .container {
-                max-width: 800px;
-            }
-            
-            .form-card {
-                padding: 30px;
-            }
+            .container { max-width: 800px; }
+            .form-card { padding: 30px; }
         }
     </style>
 </head>
@@ -379,28 +358,25 @@
         let currentIdActivo = '';
         let currentCodigoId = '';
         let currentDescripcion = '';
-        let currentQRImageData = null;
 
-        // Helper: roundRect para canvas
-        if (!CanvasRenderingContext2D.prototype.roundRect) {
-            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-                if (w < 2 * r) r = w / 2;
-                if (h < 2 * r) r = h / 2;
-                this.moveTo(x + r, y);
-                this.lineTo(x + w - r, y);
-                this.quadraticCurveTo(x + w, y, x + w, y + r);
-                this.lineTo(x + w, y + h - r);
-                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-                this.lineTo(x + r, y + h);
-                this.quadraticCurveTo(x, y + h, x, y + h - r);
-                this.lineTo(x, y + r);
-                this.quadraticCurveTo(x, y, x + r, y);
-                return this;
-            };
+        // Función para dibujar rectángulo con bordes redondeados
+        function roundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
         }
 
-        // Función para dividir texto en líneas para canvas
-        function wrapTextForCanvas(ctx, text, maxWidth) {
+        // Función para dividir texto en líneas
+        function wrapText(ctx, text, maxWidth) {
             const words = text.split('');
             const lines = [];
             let currentLine = '';
@@ -419,70 +395,46 @@
             return lines;
         }
 
-        // Función para dividir texto en líneas para HTML
-        function wrapTextForHtml(text, maxLength) {
-            const words = text.split('');
-            const lines = [];
-            let currentLine = '';
-            
-            for (let char of words) {
-                let testLine = currentLine + char;
-                if (testLine.length > maxLength && currentLine.length > 0) {
-                    lines.push(currentLine);
-                    currentLine = char;
-                } else {
-                    currentLine = testLine;
-                }
-            }
-            lines.push(currentLine);
-            return lines;
-        }
-
-        // Generar imagen de la tarjeta con bordes redondeados en TODOS los elementos
+        // Función principal para generar la imagen de la tarjeta
         async function generateCardImage(idActivo, codigoId, descripcion) {
             return new Promise(async (resolve, reject) => {
                 try {
-                    // Crear canvas para la tarjeta
+                    // Canvas principal
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Dimensiones de la tarjeta
-                    const cardWidth = 400;
-                    const cardHeight = 540;
-                    canvas.width = cardWidth;
-                    canvas.height = cardHeight;
+                    // Dimensiones
+                    const width = 400;
+                    const height = 540;
+                    canvas.width = width;
+                    canvas.height = height;
                     
                     // 1. Fondo amarillo
                     ctx.fillStyle = '#F2C200';
-                    ctx.fillRect(0, 0, cardWidth, cardHeight);
+                    ctx.fillRect(0, 0, width, height);
                     
-                    // 2. Número (con fondo blanco semi-transparente y bordes redondeados)
+                    // 2. Número (con fondo redondeado)
                     const numberText = idActivo;
                     ctx.font = 'bold 26px "Courier New", monospace';
                     ctx.textAlign = 'center';
                     
                     const numberMetrics = ctx.measureText(numberText);
-                    const numberWidth = numberMetrics.width + 40;
-                    const numberHeight = 45;
-                    const numberX = (cardWidth - numberWidth) / 2;
-                    const numberY = 20;
+                    const numberWidth = numberMetrics.width + 50;
+                    const numberHeight = 48;
+                    const numberX = (width - numberWidth) / 2;
+                    const numberY = 18;
                     
-                    // Fondo del número (redondeado)
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    ctx.beginPath();
-                    ctx.roundRect(numberX, numberY, numberWidth, numberHeight, 25);
-                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    roundedRect(ctx, numberX, numberY, numberWidth, numberHeight, 24);
                     
-                    // Texto del número
                     ctx.fillStyle = '#1a1a2e';
-                    ctx.fillText(numberText, cardWidth / 2, numberY + 32);
+                    ctx.fillText(numberText, width / 2, numberY + 33);
                     
-                    // 3. QR (con borde blanco redondeado)
+                    // 3. QR con borde blanco redondeado
                     const qrSize = 200;
-                    const qrX = (cardWidth - qrSize) / 2;
-                    const qrY = 85;
+                    const qrX = (width - qrSize) / 2;
+                    const qrY = 82;
                     
-                    // Generar QR
                     const qrCanvas = document.createElement('canvas');
                     await QRCode.toCanvas(qrCanvas, idActivo, {
                         width: qrSize,
@@ -490,69 +442,58 @@
                         color: { dark: '#000000', light: '#ffffff' }
                     });
                     
-                    currentQRImageData = qrCanvas;
-                    
-                    // Borde blanco redondeado detrás del QR
+                    // Borde blanco redondeado
                     ctx.fillStyle = '#FFFFFF';
-                    ctx.beginPath();
-                    ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 20);
-                    ctx.fill();
+                    roundedRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 20);
                     
-                    // Dibujar QR
+                    // QR
                     ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
                     
-                    // 4. Código identificativo (con fondo blanco redondeado)
+                    // 4. Código identificativo (con fondo redondeado)
                     const codeText = codigoId;
-                    ctx.font = 'bold 16px "Courier New", monospace';
+                    ctx.font = 'bold 15px "Courier New", monospace';
                     const codeMetrics = ctx.measureText(codeText);
-                    const codeWidth = codeMetrics.width + 40;
-                    const codeHeight = 38;
-                    const codeX = (cardWidth - codeWidth) / 2;
+                    const codeWidth = codeMetrics.width + 50;
+                    const codeHeight = 40;
+                    const codeX = (width - codeWidth) / 2;
                     const codeY = 305;
                     
-                    // Fondo del código (redondeado)
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    ctx.beginPath();
-                    ctx.roundRect(codeX, codeY, codeWidth, codeHeight, 25);
-                    ctx.fill();
+                    roundedRect(ctx, codeX, codeY, codeWidth, codeHeight, 20);
                     
-                    // Texto del código
                     ctx.fillStyle = '#1a1a2e';
-                    ctx.fillText(codeText, cardWidth / 2, codeY + 26);
+                    ctx.fillText(codeText, width / 2, codeY + 27);
                     
-                    // 5. Descripción (con fondo blanco redondeado y ajuste de líneas)
+                    // 5. Descripción (con fondo redondeado y múltiples líneas)
                     const descText = descripcion || 'Sin descripción';
-                    ctx.font = '13px "Segoe UI", monospace';
-                    ctx.textAlign = 'center';
+                    ctx.font = '12px "Segoe UI", monospace';
                     
-                    const maxDescWidth = cardWidth - 80;
-                    const lines = wrapTextForCanvas(ctx, descText, maxDescWidth);
-                    const lineHeight = 22;
+                    const maxDescWidth = width - 80;
+                    const lines = wrapText(ctx, descText, maxDescWidth);
+                    const lineHeight = 20;
+                    const descPadding = 12;
                     const descStartY = 365;
-                    const descPadding = 15;
                     
-                    // Calcular altura necesaria para la descripción
-                    const descTextHeight = (lines.length * lineHeight);
+                    const descTextHeight = lines.length * lineHeight;
                     const descHeight = descTextHeight + (descPadding * 2);
+                    const descWidth = width - 50;
+                    const descX = (width - descWidth) / 2;
                     
-                    // Fondo de la descripción (redondeado)
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                    ctx.beginPath();
-                    ctx.roundRect(25, descStartY - 8, cardWidth - 50, descHeight, 18);
-                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                    roundedRect(ctx, descX, descStartY - 8, descWidth, descHeight, 16);
                     
-                    // Texto de la descripción
                     ctx.fillStyle = '#1a1a2e';
+                    ctx.textAlign = 'center';
                     lines.forEach((line, index) => {
-                        ctx.fillText(line, cardWidth / 2, descStartY + (index * lineHeight) + 10);
+                        ctx.fillText(line, width / 2, descStartY + (index * lineHeight) + 10);
                     });
                     
-                    // Convertir a dataURL
+                    // Convertir a PNG
                     const imageData = canvas.toDataURL('image/png');
                     resolve(imageData);
                     
                 } catch (error) {
-                    console.error('Error generando imagen:', error);
+                    console.error('Error:', error);
                     reject(error);
                 }
             });
@@ -563,7 +504,6 @@
             const previewQrDiv = document.getElementById('previewQr');
             previewQrDiv.innerHTML = '';
             
-            // Generar QR para vista previa
             const qrCanvas = document.createElement('canvas');
             await QRCode.toCanvas(qrCanvas, idActivo, {
                 width: 180,
@@ -572,14 +512,23 @@
             });
             previewQrDiv.appendChild(qrCanvas);
             
-            // Actualizar textos
             document.getElementById('previewNumber').textContent = idActivo;
             document.getElementById('previewCode').textContent = codigoId;
             
-            // Manejar descripción larga en HTML
             const descElement = document.getElementById('previewDesc');
             if (descripcion && descripcion.length > 55) {
-                const lines = wrapTextForHtml(descripcion, 45);
+                const words = descripcion.split('');
+                let lines = [];
+                let currentLine = '';
+                for (let char of words) {
+                    if ((currentLine + char).length > 45 && currentLine.length > 0) {
+                        lines.push(currentLine);
+                        currentLine = char;
+                    } else {
+                        currentLine += char;
+                    }
+                }
+                lines.push(currentLine);
                 descElement.innerHTML = lines.join('<br>');
             } else {
                 descElement.textContent = descripcion || 'Sin descripción';
@@ -606,10 +555,9 @@
                 }));
                 
                 populateSelect();
-                showMessage(`✅ ${excelData.length} activos cargados correctamente`, 'success');
+                showMessage(`✅ ${excelData.length} activos cargados`, 'success');
             } catch (error) {
-                console.error('Error cargando Excel:', error);
-                showMessage('⚠️ No se pudo cargar el archivo Excel. Puedes ingresar datos manualmente.', 'error');
+                showMessage('⚠️ No se pudo cargar el Excel. Puedes ingresar datos manualmente.', 'error');
                 document.getElementById('idActivo').readOnly = false;
                 document.getElementById('codigoId').readOnly = false;
                 document.getElementById('descripcion').readOnly = false;
@@ -623,8 +571,7 @@
             excelData.forEach((item, index) => {
                 const option = document.createElement('option');
                 option.value = index;
-                const displayText = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
-                option.textContent = displayText;
+                option.textContent = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
                 select.appendChild(option);
             });
         }
@@ -644,7 +591,7 @@
             );
             
             select.innerHTML = '<option value="">-- Selecciona un activo --</option>';
-            filtered.forEach((item, idx) => {
+            filtered.forEach((item) => {
                 const originalIndex = excelData.findIndex(original => original.codigo === item.codigo);
                 const option = document.createElement('option');
                 option.value = originalIndex;
@@ -661,9 +608,7 @@
             const select = document.getElementById('activoSelect');
             const selectedIndex = select.value;
             
-            if (selectedIndex === "" || !excelData[selectedIndex]) {
-                return;
-            }
+            if (selectedIndex === "" || !excelData[selectedIndex]) return;
             
             const activo = excelData[selectedIndex];
             document.getElementById('idActivo').value = activo.id;
@@ -677,7 +622,7 @@
             const descripcion = document.getElementById('descripcion').value;
             
             if (!idActivo || !codigoId) {
-                showMessage('❌ Por favor, selecciona un activo o completa los campos obligatorios', 'error');
+                showMessage('❌ Selecciona un activo', 'error');
                 return;
             }
             
@@ -694,17 +639,15 @@
                 
                 await updatePreview(idActivo, codigoId, descripcion);
                 
-                // Pre-generar la imagen
+                // Pre-generar imagen
                 generateCardImage(idActivo, codigoId, descripcion).then(imgData => {
                     window._cachedImageData = imgData;
-                }).catch(err => console.error('Error pre-generando:', err));
+                }).catch(err => console.error(err));
                 
                 previewContainer.style.display = 'block';
-                showMessage('✅ Tarjeta generada correctamente', 'success');
-                
+                showMessage('✅ Tarjeta generada', 'success');
             } catch (error) {
-                console.error('Error generando tarjeta:', error);
-                showMessage('❌ Error al generar la tarjeta', 'error');
+                showMessage('❌ Error al generar', 'error');
             } finally {
                 loading.style.display = 'none';
             }
@@ -716,7 +659,7 @@
                 return;
             }
             
-            showMessage('🔄 Generando imagen para descargar...', 'info');
+            showMessage('🔄 Generando imagen...', 'info');
             
             try {
                 let imageData = window._cachedImageData;
@@ -725,7 +668,6 @@
                 }
                 
                 const fileName = currentCodigoId.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, ' ') + '.png';
-                
                 const link = document.createElement('a');
                 link.download = fileName;
                 link.href = imageData;
@@ -733,8 +675,7 @@
                 
                 showMessage('📥 Tarjeta descargada', 'success');
             } catch (error) {
-                console.error('Error descargando:', error);
-                showMessage('❌ Error al descargar la tarjeta', 'error');
+                showMessage('❌ Error al descargar', 'error');
             }
         }
 
@@ -744,7 +685,7 @@
                 return;
             }
             
-            showMessage('🔄 Preparando para compartir...', 'info');
+            showMessage('🔄 Preparando...', 'info');
             
             try {
                 let imageData = window._cachedImageData;
@@ -763,13 +704,11 @@
                     });
                     showMessage('📤 Tarjeta compartida', 'success');
                 } else {
-                    showMessage('📱 Tu navegador no soporta compartir archivos. Se descargará la imagen.', 'info');
                     downloadCard();
                 }
             } catch (error) {
                 if (error.name !== 'AbortError') {
-                    console.error('Error al compartir:', error);
-                    showMessage('❌ Error al compartir la tarjeta', 'error');
+                    showMessage('❌ Error al compartir', 'error');
                 }
             }
         }
@@ -779,7 +718,6 @@
             messageDiv.textContent = text;
             messageDiv.className = `message message-${type}`;
             messageDiv.style.display = 'block';
-            
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 3000);
@@ -792,7 +730,6 @@
         document.getElementById('downloadBtn').addEventListener('click', downloadCard);
         document.getElementById('shareBtn').addEventListener('click', shareCard);
         
-        // Inicializar
         loadExcelData();
     </script>
 </body>
