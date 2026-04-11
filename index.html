@@ -141,6 +141,19 @@
             .preview-card { max-width: 280px; }
             .preview-qr canvas { width: 150px; height: 150px; }
         }
+        /* Debug panel */
+        .debug-panel {
+            background: #333;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 8px;
+            margin-top: 10px;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -196,12 +209,23 @@
             <div class="spinner"></div>
             <p>Generando...</p>
         </div>
+
+        <!-- Debug panel (opcional, se puede eliminar después) -->
+        <div class="debug-panel" id="debugPanel"></div>
     </div>
 
     <script>
         let excelData = [];
         let currentId = '', currentCode = '', currentDesc = '';
         let cachedImage = null;
+
+        function debugLog(msg) {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = 'block';
+            panel.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+            panel.scrollTop = panel.scrollHeight;
+            console.log(msg);
+        }
 
         async function generarImagenTarjeta(id, codigo, descripcion) {
             return new Promise(async (resolve) => {
@@ -333,11 +357,25 @@
                 const data = await response.arrayBuffer();
                 const workbook = XLSX.read(data);
                 const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                excelData = json.filter(r => r.ID_ACTIVO_ARBOL && r.CODIGO_IDENTIFICATIVO).map(r => ({
-                    id: Math.floor(Number(r.ID_ACTIVO_ARBOL)).toString(),
-                    codigo: String(r.CODIGO_IDENTIFICATIVO).trim(),
-                    desc: r.DESCRIPCION ? String(r.DESCRIPCION).trim() : 'Sin descripción'
-                }));
+                
+                debugLog(`Total filas en Excel: ${json.length}`);
+                
+                excelData = json.filter(r => r.ID_ACTIVO_ARBOL && r.CODIGO_IDENTIFICATIVO).map(r => {
+                    // Limpiar el ID: eliminar .0 si existe
+                    let idRaw = String(r.ID_ACTIVO_ARBOL);
+                    if (idRaw.includes('.')) {
+                        idRaw = idRaw.split('.')[0];
+                    }
+                    return {
+                        id: idRaw,
+                        codigo: String(r.CODIGO_IDENTIFICATIVO).trim(),
+                        desc: r.DESCRIPCION ? String(r.DESCRIPCION).trim() : 'Sin descripción'
+                    };
+                });
+                
+                debugLog(`Activos procesados: ${excelData.length}`);
+                debugLog(`Ejemplo primer activo: ID=${excelData[0]?.id}, Código=${excelData[0]?.codigo}`);
+                
                 const select = document.getElementById('activoSelect');
                 select.innerHTML = '<option value="">-- Seleccionar --</option>';
                 excelData.forEach((item, i) => {
@@ -348,6 +386,7 @@
                 });
                 mostrarMensaje(`✅ ${excelData.length} activos cargados`, 'success');
             } catch(e) {
+                debugLog(`ERROR al cargar Excel: ${e.message}`);
                 mostrarMensaje('⚠️ No se pudo cargar el Excel. Puedes ingresar datos manualmente.', 'error');
                 document.getElementById('idActivo').readOnly = false;
                 document.getElementById('codigoId').readOnly = false;
@@ -363,12 +402,15 @@
             setTimeout(() => msg.style.display = 'none', 3000);
         }
 
-        // ========== BÚSQUEDA CORREGIDA ==========
+        // ========== BÚSQUEDA CORREGIDA Y DEPURADA ==========
         document.getElementById('searchInput').addEventListener('input', function() {
             const term = this.value.toLowerCase().trim();
             const select = document.getElementById('activoSelect');
             
+            debugLog(`Buscando: "${term}"`);
+            
             if (!term) {
+                debugLog(`Sin término, mostrando todos los ${excelData.length} activos`);
                 select.innerHTML = '<option value="">-- Seleccionar --</option>';
                 excelData.forEach((item, i) => {
                     const opt = document.createElement('option');
@@ -379,14 +421,20 @@
                 return;
             }
             
-            // Filtrar: el término puede coincidir con el ID completo o parcialmente, o con el código
+            // Filtrar: comparación directa con ID o con Código
             const filtrados = excelData.filter(item => {
-                // Coincidencia exacta o parcial con ID
+                // Coincidencia con ID (exacta o parcial)
                 const idMatch = item.id === term || item.id.includes(term);
-                // Coincidencia con código
+                // Coincidencia con Código
                 const codigoMatch = item.codigo.toLowerCase().includes(term);
+                
+                if (idMatch || codigoMatch) {
+                    debugLog(`  ✓ Coincidencia: ID=${item.id}, Código=${item.codigo}`);
+                }
                 return idMatch || codigoMatch;
             });
+            
+            debugLog(`Resultados encontrados: ${filtrados.length}`);
             
             select.innerHTML = '<option value="">-- Seleccionar --</option>';
             filtrados.forEach(item => {
@@ -398,14 +446,20 @@
             });
             
             if (filtrados.length === 0) {
+                debugLog(`No se encontraron resultados para "${term}"`);
                 select.innerHTML = '<option value="">-- No se encontraron resultados --</option>';
             }
         });
 
         document.getElementById('activoSelect').addEventListener('change', function() {
             const idx = this.value;
-            if (idx === "" || !excelData[idx]) return;
+            debugLog(`Seleccionado índice: ${idx}`);
+            if (idx === "" || !excelData[idx]) {
+                debugLog(`No hay datos para índice ${idx}`);
+                return;
+            }
             const item = excelData[idx];
+            debugLog(`Cargando activo: ID=${item.id}, Código=${item.codigo}`);
             document.getElementById('idActivo').value = item.id;
             document.getElementById('codigoId').value = item.codigo;
             document.getElementById('descripcion').value = item.desc;
