@@ -203,7 +203,6 @@
         let currentId = '', currentCode = '', currentDesc = '';
         let cachedImage = null;
 
-        // ========== FUNCIÓN PRINCIPAL ==========
         async function generarImagenTarjeta(id, codigo, descripcion) {
             return new Promise(async (resolve) => {
                 const canvas = document.createElement('canvas');
@@ -211,11 +210,9 @@
                 canvas.height = 540;
                 const ctx = canvas.getContext('2d');
 
-                // 1. Fondo amarillo
                 ctx.fillStyle = '#F2C200';
                 ctx.fillRect(0, 0, 400, 540);
 
-                // 2. Número (con bordes redondeados)
                 ctx.font = 'bold 26px "Courier New", monospace';
                 ctx.textAlign = 'center';
                 const numTexto = id;
@@ -237,7 +234,6 @@
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillText(numTexto, 200, 52);
 
-                // 3. Generar QR
                 const qrCanvas = document.createElement('canvas');
                 await QRCode.toCanvas(qrCanvas, id, { width: 200, margin: 1 });
                 
@@ -257,7 +253,6 @@
                 
                 ctx.drawImage(qrCanvas, 200 - 100, 82, 200, 200);
 
-                // 4. Código
                 ctx.font = 'bold 15px "Courier New", monospace';
                 const codWidth = ctx.measureText(codigo).width + 50;
                 
@@ -277,7 +272,6 @@
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillText(codigo, 200, 333);
 
-                // 5. Descripción
                 ctx.font = '12px "Segoe UI", monospace';
                 const descTexto = descripcion || 'Sin descripción';
                 const maxWidth = 300;
@@ -369,13 +363,12 @@
             setTimeout(() => msg.style.display = 'none', 3000);
         }
 
-        // ========== BÚSQUEDA MODIFICADA: busca por ID o por Código ==========
+        // ========== BÚSQUEDA CORREGIDA ==========
         document.getElementById('searchInput').addEventListener('input', function() {
             const term = this.value.toLowerCase().trim();
             const select = document.getElementById('activoSelect');
             
             if (!term) {
-                // Si no hay término, mostrar todos
                 select.innerHTML = '<option value="">-- Seleccionar --</option>';
                 excelData.forEach((item, i) => {
                     const opt = document.createElement('option');
@@ -386,11 +379,14 @@
                 return;
             }
             
-            // Filtrar por ID_ACTIVO_ARBOL o por CODIGO_IDENTIFICATIVO
-            const filtrados = excelData.filter(item => 
-                item.id.toLowerCase().includes(term) ||      // Buscar por ID
-                item.codigo.toLowerCase().includes(term)     // Buscar por Código
-            );
+            // Filtrar: el término puede coincidir con el ID completo o parcialmente, o con el código
+            const filtrados = excelData.filter(item => {
+                // Coincidencia exacta o parcial con ID
+                const idMatch = item.id === term || item.id.includes(term);
+                // Coincidencia con código
+                const codigoMatch = item.codigo.toLowerCase().includes(term);
+                return idMatch || codigoMatch;
+            });
             
             select.innerHTML = '<option value="">-- Seleccionar --</option>';
             filtrados.forEach(item => {
