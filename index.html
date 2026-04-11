@@ -30,7 +30,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             background: #F2C200;
             border-radius: 20px;
@@ -52,7 +51,6 @@
             opacity: 0.8;
         }
 
-        /* Formulario */
         .form-card {
             background: white;
             border-radius: 20px;
@@ -93,7 +91,6 @@
             min-height: 60px;
         }
 
-        /* Botones */
         .btn {
             width: 100%;
             padding: 14px;
@@ -134,7 +131,6 @@
             transform: translateY(0);
         }
 
-        /* Selector de búsqueda */
         .search-section {
             margin-bottom: 15px;
         }
@@ -143,7 +139,7 @@
             background: #f8f9fa;
         }
 
-        /* Tarjeta QR */
+        /* Tarjeta QR - IMPORTANTE: posición relative para captura */
         .qr-card-container {
             background: white;
             border-radius: 20px;
@@ -163,6 +159,7 @@
             width: 100%;
             max-width: 320px;
             margin: 0 auto;
+            position: relative;
         }
 
         .qr-number {
@@ -181,6 +178,7 @@
             margin: 15px 0;
             display: flex;
             justify-content: center;
+            min-height: 180px;
         }
 
         .qr-code canvas {
@@ -216,7 +214,6 @@
             border-radius: 12px;
         }
 
-        /* Botones de acción */
         .action-buttons {
             display: flex;
             gap: 10px;
@@ -228,7 +225,6 @@
             margin-top: 0;
         }
 
-        /* Mensajes */
         .message {
             padding: 12px;
             border-radius: 12px;
@@ -255,7 +251,6 @@
             border-left: 4px solid #17a2b8;
         }
 
-        /* Loading */
         .loading {
             display: none;
             text-align: center;
@@ -277,7 +272,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Responsive */
         @media (max-width: 480px) {
             body {
                 padding: 12px;
@@ -374,13 +368,13 @@
     <script>
         let excelData = [];
         let currentCardCanvas = null;
+        let currentQRCanvas = null;
 
         // Cargar datos del Excel al iniciar
         async function loadExcelData() {
             showMessage('Cargando base de datos...', 'info');
             
             try {
-                // Intentar cargar el archivo Excel desde el servidor
                 const response = await fetch('data/DOC-20251215-WA0003..xlsx');
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -400,7 +394,6 @@
             } catch (error) {
                 console.error('Error cargando Excel:', error);
                 showMessage('⚠️ No se pudo cargar el archivo Excel. Por favor, asegúrate de que el archivo esté en la carpeta "data"', 'error');
-                // Permitir entrada manual
                 document.getElementById('idActivo').readOnly = false;
                 document.getElementById('codigoId').readOnly = false;
                 document.getElementById('descripcion').readOnly = false;
@@ -483,10 +476,11 @@
                 document.getElementById('qrCodeValue').textContent = codigoId;
                 document.getElementById('qrDescription').textContent = descripcion || 'Sin descripción';
                 
-                // Generar QR
+                // Generar QR en un canvas separado
                 const qrDiv = document.getElementById('qrCodeDiv');
                 qrDiv.innerHTML = '';
                 const qrCanvas = document.createElement('canvas');
+                qrCanvas.id = 'qrCanvasTemp';
                 qrDiv.appendChild(qrCanvas);
                 
                 await QRCode.toCanvas(qrCanvas, idActivo, {
@@ -498,10 +492,13 @@
                     }
                 });
                 
+                // Guardar referencia del canvas del QR
+                currentQRCanvas = qrCanvas;
+                
                 container.style.display = 'block';
                 showMessage('✅ Tarjeta generada correctamente', 'success');
                 
-                // Preparar para descarga
+                // Preparar la tarjeta para descarga
                 await prepareCardForDownload();
                 
             } catch (error) {
@@ -513,21 +510,43 @@
         }
 
         async function prepareCardForDownload() {
-            const card = document.getElementById('qrCard');
+            // Esperar un momento para asegurar que todo esté renderizado
+            await new Promise(r => setTimeout(r, 200));
             
-            // Clonar la tarjeta para la captura
-            const cloneCard = card.cloneNode(true);
-            cloneCard.style.position = 'absolute';
+            // Clonar la tarjeta completa
+            const originalCard = document.getElementById('qrCard');
+            const cloneCard = originalCard.cloneNode(true);
+            
+            // Asegurar estilos para la captura
+            cloneCard.style.position = 'fixed';
             cloneCard.style.left = '-9999px';
-            cloneCard.style.top = '-9999px';
+            cloneCard.style.top = '0';
             cloneCard.style.width = '320px';
             cloneCard.style.backgroundColor = '#F2C200';
             cloneCard.style.borderRadius = '16px';
             cloneCard.style.padding = '20px';
             cloneCard.style.margin = '0';
-            document.body.appendChild(cloneCard);
+            cloneCard.style.display = 'block';
             
-            // Asegurar estilos
+            // Asegurar que el QR en el clon tenga el canvas correcto
+            const cloneQRDiv = cloneCard.querySelector('.qr-code');
+            if (cloneQRDiv && currentQRCanvas) {
+                cloneQRDiv.innerHTML = '';
+                const clonedCanvas = document.createElement('canvas');
+                clonedCanvas.width = currentQRCanvas.width;
+                clonedCanvas.height = currentQRCanvas.height;
+                const ctx = clonedCanvas.getContext('2d');
+                ctx.drawImage(currentQRCanvas, 0, 0);
+                clonedCanvas.style.width = '180px';
+                clonedCanvas.style.height = '180px';
+                clonedCanvas.style.border = '3px solid white';
+                clonedCanvas.style.borderRadius = '16px';
+                clonedCanvas.style.padding = '8px';
+                clonedCanvas.style.background = 'white';
+                cloneQRDiv.appendChild(clonedCanvas);
+            }
+            
+            // Asegurar estilos de los elementos internos
             const numberDiv = cloneCard.querySelector('.qr-number');
             if (numberDiv) numberDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
             
@@ -537,16 +556,63 @@
             const descDiv = cloneCard.querySelector('.qr-description');
             if (descDiv) descDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
             
+            document.body.appendChild(cloneCard);
+            
+            // Esperar a que el DOM se actualice
             await new Promise(r => setTimeout(r, 100));
             
-            const canvas = await html2canvas(cloneCard, {
-                scale: 2.5,
-                backgroundColor: '#F2C200',
-                logging: false
-            });
+            try {
+                const canvas = await html2canvas(cloneCard, {
+                    scale: 2.5,
+                    backgroundColor: '#F2C200',
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: false
+                });
+                currentCardCanvas = canvas;
+            } catch (error) {
+                console.error('Error en html2canvas:', error);
+                // Fallback: crear un canvas simple con los datos
+                currentCardCanvas = await createFallbackCanvas();
+            }
             
+            // Limpiar el clon
             document.body.removeChild(cloneCard);
-            currentCardCanvas = canvas;
+        }
+
+        async function createFallbackCanvas() {
+            // Canvas alternativo si html2canvas falla
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 640;
+            canvas.height = 640;
+            
+            // Fondo
+            ctx.fillStyle = '#F2C200';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Número
+            ctx.fillStyle = '#1a1a2e';
+            ctx.font = 'bold 30px monospace';
+            ctx.fillText(document.getElementById('idActivo').value, canvas.width/2 - 50, 80);
+            
+            // QR (si está disponible)
+            if (currentQRCanvas) {
+                ctx.drawImage(currentQRCanvas, canvas.width/2 - 100, 120, 200, 200);
+            }
+            
+            // Código
+            ctx.font = 'bold 20px monospace';
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillText(document.getElementById('codigoId').value, canvas.width/2 - 100, 400);
+            
+            // Descripción
+            ctx.font = '16px monospace';
+            ctx.fillStyle = '#1a1a2e';
+            const desc = document.getElementById('descripcion').value || 'Sin descripción';
+            ctx.fillText(desc.substring(0, 40), canvas.width/2 - 150, 480);
+            
+            return canvas;
         }
 
         async function downloadCard() {
@@ -586,10 +652,13 @@
                     showMessage('📤 Tarjeta compartida', 'success');
                 } catch (error) {
                     if (error.name !== 'AbortError') {
-                        showMessage('❌ Error al compartir', 'error');
+                        console.error('Error al compartir:', error);
+                        showMessage('❌ Error al compartir, se descargará la imagen', 'error');
+                        downloadCard();
                     }
                 }
             } else {
+                showMessage('📱 Tu navegador no soporta compartir. Se descargará la imagen.', 'info');
                 downloadCard();
             }
         }
