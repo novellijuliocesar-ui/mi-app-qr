@@ -201,8 +201,9 @@
             font-weight: 700;
             color: #1a1a2e;
             background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 20px;
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
             margin: 10px 0;
             word-break: break-all;
             font-family: 'Courier New', monospace;
@@ -215,8 +216,10 @@
             line-height: 1.4;
             font-weight: 500;
             background: rgba(255, 255, 255, 0.7);
-            padding: 6px 10px;
-            border-radius: 12px;
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 16px;
+            max-width: 90%;
         }
 
         .action-buttons {
@@ -378,7 +381,25 @@
         let currentDescripcion = '';
         let currentQRImageData = null;
 
-        // Función para dividir texto en líneas (para canvas)
+        // Helper: roundRect para canvas
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                return this;
+            };
+        }
+
+        // Función para dividir texto en líneas para canvas
         function wrapTextForCanvas(ctx, text, maxWidth) {
             const words = text.split('');
             const lines = [];
@@ -417,21 +438,21 @@
             return lines;
         }
 
-        // Generar imagen de la tarjeta con el MISMO formato visual que la vista previa
+        // Generar imagen de la tarjeta con bordes redondeados en TODOS los elementos
         async function generateCardImage(idActivo, codigoId, descripcion) {
             return new Promise(async (resolve, reject) => {
                 try {
-                    // Crear canvas para la tarjeta (tamaño fijo 400x520)
+                    // Crear canvas para la tarjeta
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Dimensiones de la tarjeta (proporción similar a la vista previa)
+                    // Dimensiones de la tarjeta
                     const cardWidth = 400;
                     const cardHeight = 540;
                     canvas.width = cardWidth;
                     canvas.height = cardHeight;
                     
-                    // 1. Fondo amarillo con bordes redondeados (simulados)
+                    // 1. Fondo amarillo
                     ctx.fillStyle = '#F2C200';
                     ctx.fillRect(0, 0, cardWidth, cardHeight);
                     
@@ -440,7 +461,6 @@
                     ctx.font = 'bold 26px "Courier New", monospace';
                     ctx.textAlign = 'center';
                     
-                    // Medir el texto del número
                     const numberMetrics = ctx.measureText(numberText);
                     const numberWidth = numberMetrics.width + 40;
                     const numberHeight = 45;
@@ -457,7 +477,7 @@
                     ctx.fillStyle = '#1a1a2e';
                     ctx.fillText(numberText, cardWidth / 2, numberY + 32);
                     
-                    // 3. QR (con borde blanco)
+                    // 3. QR (con borde blanco redondeado)
                     const qrSize = 200;
                     const qrX = (cardWidth - qrSize) / 2;
                     const qrY = 85;
@@ -470,58 +490,61 @@
                         color: { dark: '#000000', light: '#ffffff' }
                     });
                     
-                    // Guardar datos del QR para posible uso
                     currentQRImageData = qrCanvas;
                     
-                    // Borde blanco detrás del QR
+                    // Borde blanco redondeado detrás del QR
                     ctx.fillStyle = '#FFFFFF';
                     ctx.beginPath();
-                    ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 16);
+                    ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 20);
                     ctx.fill();
                     
                     // Dibujar QR
                     ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
                     
-                    // 4. Código identificativo
+                    // 4. Código identificativo (con fondo blanco redondeado)
                     const codeText = codigoId;
                     ctx.font = 'bold 16px "Courier New", monospace';
                     const codeMetrics = ctx.measureText(codeText);
-                    const codeWidth = codeMetrics.width + 30;
-                    const codeHeight = 35;
+                    const codeWidth = codeMetrics.width + 40;
+                    const codeHeight = 38;
                     const codeX = (cardWidth - codeWidth) / 2;
-                    const codeY = 310;
+                    const codeY = 305;
                     
-                    // Fondo del código
+                    // Fondo del código (redondeado)
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
                     ctx.beginPath();
-                    ctx.roundRect(codeX, codeY, codeWidth, codeHeight, 20);
+                    ctx.roundRect(codeX, codeY, codeWidth, codeHeight, 25);
                     ctx.fill();
                     
                     // Texto del código
                     ctx.fillStyle = '#1a1a2e';
-                    ctx.fillText(codeText, cardWidth / 2, codeY + 24);
+                    ctx.fillText(codeText, cardWidth / 2, codeY + 26);
                     
-                    // 5. Descripción (con ajuste de líneas)
+                    // 5. Descripción (con fondo blanco redondeado y ajuste de líneas)
                     const descText = descripcion || 'Sin descripción';
                     ctx.font = '13px "Segoe UI", monospace';
                     ctx.textAlign = 'center';
                     
-                    const maxDescWidth = cardWidth - 60;
+                    const maxDescWidth = cardWidth - 80;
                     const lines = wrapTextForCanvas(ctx, descText, maxDescWidth);
                     const lineHeight = 22;
-                    const descStartY = 370;
-                    const descHeight = (lines.length * lineHeight) + 20;
+                    const descStartY = 365;
+                    const descPadding = 15;
                     
-                    // Fondo de la descripción
+                    // Calcular altura necesaria para la descripción
+                    const descTextHeight = (lines.length * lineHeight);
+                    const descHeight = descTextHeight + (descPadding * 2);
+                    
+                    // Fondo de la descripción (redondeado)
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
                     ctx.beginPath();
-                    ctx.roundRect(20, descStartY - 10, cardWidth - 40, descHeight, 12);
+                    ctx.roundRect(25, descStartY - 8, cardWidth - 50, descHeight, 18);
                     ctx.fill();
                     
                     // Texto de la descripción
                     ctx.fillStyle = '#1a1a2e';
                     lines.forEach((line, index) => {
-                        ctx.fillText(line, cardWidth / 2, descStartY + (index * lineHeight));
+                        ctx.fillText(line, cardWidth / 2, descStartY + (index * lineHeight) + 10);
                     });
                     
                     // Convertir a dataURL
@@ -533,24 +556,6 @@
                     reject(error);
                 }
             });
-        }
-
-        // Helper: roundRect para canvas
-        if (!CanvasRenderingContext2D.prototype.roundRect) {
-            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-                if (w < 2 * r) r = w / 2;
-                if (h < 2 * r) r = h / 2;
-                this.moveTo(x+r, y);
-                this.lineTo(x+w-r, y);
-                this.quadraticCurveTo(x+w, y, x+w, y+r);
-                this.lineTo(x+w, y+h-r);
-                this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-                this.lineTo(x+r, y+h);
-                this.quadraticCurveTo(x, y+h, x, y+h-r);
-                this.lineTo(x, y+r);
-                this.quadraticCurveTo(x, y, x+r, y);
-                return this;
-            };
         }
 
         // Actualizar vista previa
@@ -573,7 +578,7 @@
             
             // Manejar descripción larga en HTML
             const descElement = document.getElementById('previewDesc');
-            if (descripcion && descripcion.length > 60) {
+            if (descripcion && descripcion.length > 55) {
                 const lines = wrapTextForHtml(descripcion, 45);
                 descElement.innerHTML = lines.join('<br>');
             } else {
@@ -683,15 +688,13 @@
             previewContainer.style.display = 'none';
             
             try {
-                // Guardar valores actuales
                 currentIdActivo = idActivo;
                 currentCodigoId = codigoId;
                 currentDescripcion = descripcion;
                 
-                // Actualizar vista previa
                 await updatePreview(idActivo, codigoId, descripcion);
                 
-                // Pre-generar la imagen para descarga (en segundo plano)
+                // Pre-generar la imagen
                 generateCardImage(idActivo, codigoId, descripcion).then(imgData => {
                     window._cachedImageData = imgData;
                 }).catch(err => console.error('Error pre-generando:', err));
@@ -716,7 +719,6 @@
             showMessage('🔄 Generando imagen para descargar...', 'info');
             
             try {
-                // Usar imagen cacheada o generar nueva
                 let imageData = window._cachedImageData;
                 if (!imageData) {
                     imageData = await generateCardImage(currentIdActivo, currentCodigoId, currentDescripcion);
