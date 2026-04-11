@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#F2C200">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Generador de Tarjetas QR</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: #F2C200;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #1a1a2e;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.8rem;
+            color: #1a1a2e;
+            opacity: 0.8;
+        }
+
+        /* Formulario */
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #F2C200;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Botones */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #F2C200;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #e0b000;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #16213e;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Selector de búsqueda */
+        .search-section {
+            margin-bottom: 15px;
+        }
+
+        .search-select {
+            background: #f8f9fa;
+        }
+
+        /* Tarjeta QR */
+        .qr-card-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .qr-card {
+            background: #F2C200;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            display: inline-block;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .qr-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a2e;
+            background: rgba(255, 255, 255, 0.8);
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .qr-code {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .qr-code canvas {
+            width: 180px;
+            height: 180px;
+            border: 3px solid white;
+            border-radius: 16px;
+            padding: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .qr-code-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .qr-description {
+            font-size: 11px;
+            color: #1a1a2e;
+            margin-top: 8px;
+            line-height: 1.4;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 6px 10px;
+            border-radius: 12px;
+        }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        /* Mensajes */
+        .message {
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .message-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .message-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .message-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #F2C200;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            
+            .qr-card {
+                max-width: 280px;
+            }
+            
+            .qr-code canvas {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .qr-number {
+                font-size: 16px;
+            }
+            
+            .qr-code-value {
+                font-size: 11px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 800px;
+            }
+            
+            .form-card {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Generador de Tarjetas QR</h1>
+            <p>Selecciona o busca un activo del archivo Excel</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="form-card">
+            <div class="search-section">
+                <label>🔍 Buscar por Código o Descripción</label>
+                <input type="text" id="searchInput" placeholder="Escribe para buscar..." autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>📋 Seleccionar activo</label>
+                <select id="activoSelect" class="search-select">
+                    <option value="">-- Cargando datos... --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>🆔 ID ACTIVO ARBOL</label>
+                <input type="text" id="idActivo" placeholder="ID del activo" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>🏷️ CÓDIGO IDENTIFICATIVO</label>
+                <input type="text" id="codigoId" placeholder="Código identificativo" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>📝 DESCRIPCIÓN</label>
+                <textarea id="descripcion" placeholder="Descripción" readonly></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="generateBtn">✨ Generar Tarjeta QR</button>
+        </div>
+
+        <div id="qrCardContainer" class="qr-card-container">
+            <div id="qrCard" class="qr-card">
+                <div id="qrNumber" class="qr-number"></div>
+                <div id="qrCodeDiv" class="qr-code"></div>
+                <div id="qrCodeValue" class="qr-code-value"></div>
+                <div id="qrDescription" class="qr-description"></div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="downloadBtn">📥 Descargar Tarjeta</button>
+                <button class="btn btn-success" id="shareBtn">📤 Compartir</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generando tarjeta...</p>
+        </div>
+    </div>
+
+    <script>
+        let excelData = [];
+        let currentCardCanvas = null;
+
+        // Cargar datos del Excel al iniciar
+        async function loadExcelData() {
+            showMessage('Cargando base de datos...', 'info');
+            
+            try {
+                // Intentar cargar el archivo Excel desde el servidor
+                const response = await fetch('data/DOC-20251215-WA0003..xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                excelData = jsonData.filter(row => 
+                    row.ID_ACTIVO_ARBOL && row.CODIGO_IDENTIFICATIVO
+                ).map(row => ({
+                    id: typeof row.ID_ACTIVO_ARBOL === 'number' ? Math.floor(row.ID_ACTIVO_ARBOL).toString() : String(row.ID_ACTIVO_ARBOL),
+                    codigo: String(row.CODIGO_IDENTIFICATIVO).trim(),
+                    descripcion: row.DESCRIPCION ? String(row.DESCRIPCION).trim() : 'Sin descripción'
+                }));
+                
+                populateSelect();
+                showMessage(`✅ ${excelData.length} activos cargados correctamente`, 'success');
+            } catch (error) {
+                console.error('Error cargando Excel:', error);
+                showMessage('⚠️ No se pudo cargar el archivo Excel. Por favor, asegúrate de que el archivo esté en la carpeta "data"', 'error');
+                // Permitir entrada manual
+                document.getElementById('idActivo').readOnly = false;
+                document.getElementById('codigoId').readOnly = false;
+                document.getElementById('descripcion').readOnly = false;
+            }
+        }
+
+        function populateSelect() {
+            const select = document.getElementById('activoSelect');
+            select.innerHTML = '<option value="">-- Selecciona un activo --</option>';
+            
+            excelData.forEach((item, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
+                select.appendChild(option);
+            });
+        }
+
+        function searchActivos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const select = document.getElementById('activoSelect');
+            
+            if (!searchTerm) {
+                populateSelect();
+                return;
+            }
+            
+            const filtered = excelData.filter(item => 
+                item.codigo.toLowerCase().includes(searchTerm) || 
+                item.descripcion.toLowerCase().includes(searchTerm)
+            );
+            
+            select.innerHTML = '<option value="">-- Selecciona un activo --</option>';
+            filtered.forEach((item, idx) => {
+                const originalIndex = excelData.findIndex(original => original.codigo === item.codigo);
+                const option = document.createElement('option');
+                option.value = originalIndex;
+                option.textContent = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
+                select.appendChild(option);
+            });
+            
+            if (filtered.length === 0) {
+                select.innerHTML = '<option value="">-- No se encontraron resultados --</option>';
+            }
+        }
+
+        function loadSelectedActivo() {
+            const select = document.getElementById('activoSelect');
+            const selectedIndex = select.value;
+            
+            if (selectedIndex === "" || !excelData[selectedIndex]) {
+                return;
+            }
+            
+            const activo = excelData[selectedIndex];
+            document.getElementById('idActivo').value = activo.id;
+            document.getElementById('codigoId').value = activo.codigo;
+            document.getElementById('descripcion').value = activo.descripcion;
+        }
+
+        async function generateQRCard() {
+            const idActivo = document.getElementById('idActivo').value;
+            const codigoId = document.getElementById('codigoId').value;
+            const descripcion = document.getElementById('descripcion').value;
+            
+            if (!idActivo || !codigoId) {
+                showMessage('❌ Por favor, selecciona un activo o completa los campos obligatorios', 'error');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('qrCardContainer');
+            
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            
+            try {
+                // Actualizar elementos de la tarjeta
+                document.getElementById('qrNumber').textContent = idActivo;
+                document.getElementById('qrCodeValue').textContent = codigoId;
+                document.getElementById('qrDescription').textContent = descripcion || 'Sin descripción';
+                
+                // Generar QR
+                const qrDiv = document.getElementById('qrCodeDiv');
+                qrDiv.innerHTML = '';
+                const qrCanvas = document.createElement('canvas');
+                qrDiv.appendChild(qrCanvas);
+                
+                await QRCode.toCanvas(qrCanvas, idActivo, {
+                    width: 180,
+                    margin: 1,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    }
+                });
+                
+                container.style.display = 'block';
+                showMessage('✅ Tarjeta generada correctamente', 'success');
+                
+                // Preparar para descarga
+                await prepareCardForDownload();
+                
+            } catch (error) {
+                console.error('Error generando tarjeta:', error);
+                showMessage('❌ Error al generar la tarjeta', 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function prepareCardForDownload() {
+            const card = document.getElementById('qrCard');
+            
+            // Clonar la tarjeta para la captura
+            const cloneCard = card.cloneNode(true);
+            cloneCard.style.position = 'absolute';
+            cloneCard.style.left = '-9999px';
+            cloneCard.style.top = '-9999px';
+            cloneCard.style.width = '320px';
+            cloneCard.style.backgroundColor = '#F2C200';
+            cloneCard.style.borderRadius = '16px';
+            cloneCard.style.padding = '20px';
+            cloneCard.style.margin = '0';
+            document.body.appendChild(cloneCard);
+            
+            // Asegurar estilos
+            const numberDiv = cloneCard.querySelector('.qr-number');
+            if (numberDiv) numberDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            
+            const codeDiv = cloneCard.querySelector('.qr-code-value');
+            if (codeDiv) codeDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            
+            const descDiv = cloneCard.querySelector('.qr-description');
+            if (descDiv) descDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+            
+            await new Promise(r => setTimeout(r, 100));
+            
+            const canvas = await html2canvas(cloneCard, {
+                scale: 2.5,
+                backgroundColor: '#F2C200',
+                logging: false
+            });
+            
+            document.body.removeChild(cloneCard);
+            currentCardCanvas = canvas;
+        }
+
+        async function downloadCard() {
+            if (!currentCardCanvas) {
+                showMessage('❌ Primero genera una tarjeta', 'error');
+                return;
+            }
+            
+            const codigoId = document.getElementById('codigoId').value;
+            let fileName = codigoId.replace(/[<>:"/\\|?*]/g, '_');
+            fileName = fileName.replace(/\s+/g, ' ').trim();
+            
+            const link = document.createElement('a');
+            link.download = `${fileName}.png`;
+            link.href = currentCardCanvas.toDataURL();
+            link.click();
+            
+            showMessage('📥 Tarjeta descargada', 'success');
+        }
+
+        async function shareCard() {
+            if (!currentCardCanvas) {
+                showMessage('❌ Primero genera una tarjeta', 'error');
+                return;
+            }
+            
+            if (navigator.share) {
+                try {
+                    const blob = await new Promise(resolve => currentCardCanvas.toBlob(resolve, 'image/png'));
+                    const file = new File([blob], 'tarjeta_qr.png', { type: 'image/png' });
+                    
+                    await navigator.share({
+                        title: 'Tarjeta QR',
+                        text: `Código: ${document.getElementById('codigoId').value}`,
+                        files: [file]
+                    });
+                    showMessage('📤 Tarjeta compartida', 'success');
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        showMessage('❌ Error al compartir', 'error');
+                    }
+                }
+            } else {
+                downloadCard();
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message message-${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', searchActivos);
+        document.getElementById('activoSelect').addEventListener('change', loadSelectedActivo);
+        document.getElementById('generateBtn').addEventListener('click', generateQRCard);
+        document.getElementById('downloadBtn').addEventListener('click', downloadCard);
+        document.getElementById('shareBtn').addEventListener('click', shareCard);
+        
+        // Inicializar
+        loadExcelData();
+    </script>
+</body>
+</html>
