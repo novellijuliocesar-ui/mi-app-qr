@@ -10,7 +10,6 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -139,8 +138,8 @@
             background: #f8f9fa;
         }
 
-        /* Tarjeta QR - IMPORTANTE: posición relative para captura */
-        .qr-card-container {
+        /* Vista previa de la tarjeta */
+        .preview-container {
             background: white;
             border-radius: 20px;
             padding: 20px;
@@ -150,7 +149,15 @@
             display: none;
         }
 
-        .qr-card {
+        .preview-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-card {
             background: #F2C200;
             border-radius: 16px;
             padding: 20px;
@@ -159,10 +166,9 @@
             width: 100%;
             max-width: 320px;
             margin: 0 auto;
-            position: relative;
         }
 
-        .qr-number {
+        .preview-number {
             font-size: 20px;
             font-weight: bold;
             color: #1a1a2e;
@@ -174,14 +180,13 @@
             font-family: 'Courier New', monospace;
         }
 
-        .qr-code {
+        .preview-qr {
             margin: 15px 0;
             display: flex;
             justify-content: center;
-            min-height: 180px;
         }
 
-        .qr-code canvas {
+        .preview-qr canvas {
             width: 180px;
             height: 180px;
             border: 3px solid white;
@@ -191,7 +196,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .qr-code-value {
+        .preview-code {
             font-size: 13px;
             font-weight: 700;
             color: #1a1a2e;
@@ -203,7 +208,7 @@
             font-family: 'Courier New', monospace;
         }
 
-        .qr-description {
+        .preview-desc {
             font-size: 11px;
             color: #1a1a2e;
             margin-top: 8px;
@@ -277,20 +282,20 @@
                 padding: 12px;
             }
             
-            .qr-card {
+            .preview-card {
                 max-width: 280px;
             }
             
-            .qr-code canvas {
+            .preview-qr canvas {
                 width: 150px;
                 height: 150px;
             }
             
-            .qr-number {
+            .preview-number {
                 font-size: 16px;
             }
             
-            .qr-code-value {
+            .preview-code {
                 font-size: 11px;
             }
         }
@@ -346,12 +351,13 @@
             <button class="btn btn-primary" id="generateBtn">✨ Generar Tarjeta QR</button>
         </div>
 
-        <div id="qrCardContainer" class="qr-card-container">
-            <div id="qrCard" class="qr-card">
-                <div id="qrNumber" class="qr-number"></div>
-                <div id="qrCodeDiv" class="qr-code"></div>
-                <div id="qrCodeValue" class="qr-code-value"></div>
-                <div id="qrDescription" class="qr-description"></div>
+        <div id="previewContainer" class="preview-container">
+            <div class="preview-title">📋 Vista previa de la tarjeta</div>
+            <div id="previewCard" class="preview-card">
+                <div id="previewNumber" class="preview-number"></div>
+                <div id="previewQr" class="preview-qr"></div>
+                <div id="previewCode" class="preview-code"></div>
+                <div id="previewDesc" class="preview-desc"></div>
             </div>
             <div class="action-buttons">
                 <button class="btn btn-secondary" id="downloadBtn">📥 Descargar Tarjeta</button>
@@ -367,10 +373,148 @@
 
     <script>
         let excelData = [];
-        let currentCardCanvas = null;
-        let currentQRCanvas = null;
+        let currentImageData = null; // Almacena la imagen generada en base64
+        let currentIdActivo = '';
+        let currentCodigoId = '';
+        let currentDescripcion = '';
 
-        // Cargar datos del Excel al iniciar
+        // Función para dividir texto en líneas
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split('');
+            const lines = [];
+            let currentLine = '';
+            
+            for (let char of words) {
+                let testLine = currentLine + char;
+                let metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && currentLine.length > 0) {
+                    lines.push(currentLine);
+                    currentLine = char;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // Función principal para generar la tarjeta como imagen
+        async function generateCardImage(idActivo, codigoId, descripcion) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Crear canvas para la tarjeta
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Dimensiones de la tarjeta
+                    const cardWidth = 400;
+                    const cardHeight = 520;
+                    canvas.width = cardWidth;
+                    canvas.height = cardHeight;
+                    
+                    // 1. Dibujar fondo amarillo
+                    ctx.fillStyle = '#F2C200';
+                    ctx.fillRect(0, 0, cardWidth, cardHeight);
+                    
+                    // 2. Dibujar el número (ID_ACTIVO_ARBOL)
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.font = 'bold 26px "Courier New", monospace';
+                    ctx.textAlign = 'center';
+                    
+                    // Fondo blanco semi-transparente para el número
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    const numberText = idActivo;
+                    const numberMetrics = ctx.measureText(numberText);
+                    const numberWidth = numberMetrics.width + 40;
+                    ctx.fillRect(cardWidth/2 - numberWidth/2, 15, numberWidth, 45);
+                    
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillText(numberText, cardWidth/2, 48);
+                    
+                    // 3. Generar y dibujar el QR
+                    const qrCanvas = document.createElement('canvas');
+                    await QRCode.toCanvas(qrCanvas, idActivo, {
+                        width: 200,
+                        margin: 1,
+                        color: { dark: '#000000', light: '#ffffff' }
+                    });
+                    
+                    // Dibujar QR con borde blanco
+                    const qrSize = 200;
+                    const qrX = (cardWidth - qrSize) / 2;
+                    const qrY = 75;
+                    
+                    // Borde blanco detrás del QR
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16);
+                    
+                    // Dibujar QR
+                    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+                    
+                    // 4. Dibujar el código identificativo
+                    ctx.font = 'bold 16px "Courier New", monospace';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    const codeText = codigoId;
+                    const codeMetrics = ctx.measureText(codeText);
+                    const codeWidth = codeMetrics.width + 30;
+                    ctx.fillRect(cardWidth/2 - codeWidth/2, 295, codeWidth, 35);
+                    
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillText(codeText, cardWidth/2, 320);
+                    
+                    // 5. Dibujar la descripción (con ajuste de línea)
+                    ctx.font = '13px "Segoe UI", monospace';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    
+                    const descText = descripcion || 'Sin descripción';
+                    const maxWidth = cardWidth - 60;
+                    const lines = wrapText(ctx, descText, maxWidth);
+                    const lineHeight = 22;
+                    const startY = 365;
+                    
+                    // Fondo para la descripción
+                    const descHeight = (lines.length * lineHeight) + 20;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.fillRect(20, startY - 10, cardWidth - 40, descHeight);
+                    
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.textAlign = 'center';
+                    lines.forEach((line, index) => {
+                        ctx.fillText(line, cardWidth/2, startY + (index * lineHeight));
+                    });
+                    
+                    // Convertir a dataURL
+                    const imageData = canvas.toDataURL('image/png');
+                    resolve(imageData);
+                    
+                } catch (error) {
+                    console.error('Error generando imagen:', error);
+                    reject(error);
+                }
+            });
+        }
+
+        // Actualizar vista previa con el QR
+        async function updatePreview(idActivo, codigoId, descripcion) {
+            const previewQrDiv = document.getElementById('previewQr');
+            previewQrDiv.innerHTML = '';
+            
+            // Generar QR para vista previa
+            const qrCanvas = document.createElement('canvas');
+            await QRCode.toCanvas(qrCanvas, idActivo, {
+                width: 180,
+                margin: 1,
+                color: { dark: '#000000', light: '#ffffff' }
+            });
+            previewQrDiv.appendChild(qrCanvas);
+            
+            // Actualizar textos
+            document.getElementById('previewNumber').textContent = idActivo;
+            document.getElementById('previewCode').textContent = codigoId;
+            document.getElementById('previewDesc').textContent = descripcion || 'Sin descripción';
+        }
+
+        // Cargar datos del Excel
         async function loadExcelData() {
             showMessage('Cargando base de datos...', 'info');
             
@@ -393,7 +537,7 @@
                 showMessage(`✅ ${excelData.length} activos cargados correctamente`, 'success');
             } catch (error) {
                 console.error('Error cargando Excel:', error);
-                showMessage('⚠️ No se pudo cargar el archivo Excel. Por favor, asegúrate de que el archivo esté en la carpeta "data"', 'error');
+                showMessage('⚠️ No se pudo cargar el archivo Excel. Puedes ingresar datos manualmente.', 'error');
                 document.getElementById('idActivo').readOnly = false;
                 document.getElementById('codigoId').readOnly = false;
                 document.getElementById('descripcion').readOnly = false;
@@ -407,7 +551,8 @@
             excelData.forEach((item, index) => {
                 const option = document.createElement('option');
                 option.value = index;
-                option.textContent = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
+                const displayText = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
+                option.textContent = displayText;
                 select.appendChild(option);
             });
         }
@@ -465,41 +610,25 @@
             }
             
             const loading = document.getElementById('loading');
-            const container = document.getElementById('qrCardContainer');
+            const previewContainer = document.getElementById('previewContainer');
             
             loading.style.display = 'block';
-            container.style.display = 'none';
+            previewContainer.style.display = 'none';
             
             try {
-                // Actualizar elementos de la tarjeta
-                document.getElementById('qrNumber').textContent = idActivo;
-                document.getElementById('qrCodeValue').textContent = codigoId;
-                document.getElementById('qrDescription').textContent = descripcion || 'Sin descripción';
+                // Guardar valores actuales
+                currentIdActivo = idActivo;
+                currentCodigoId = codigoId;
+                currentDescripcion = descripcion;
                 
-                // Generar QR en un canvas separado
-                const qrDiv = document.getElementById('qrCodeDiv');
-                qrDiv.innerHTML = '';
-                const qrCanvas = document.createElement('canvas');
-                qrCanvas.id = 'qrCanvasTemp';
-                qrDiv.appendChild(qrCanvas);
+                // Actualizar vista previa
+                await updatePreview(idActivo, codigoId, descripcion);
                 
-                await QRCode.toCanvas(qrCanvas, idActivo, {
-                    width: 180,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
-                });
+                // Generar imagen para descarga
+                currentImageData = await generateCardImage(idActivo, codigoId, descripcion);
                 
-                // Guardar referencia del canvas del QR
-                currentQRCanvas = qrCanvas;
-                
-                container.style.display = 'block';
+                previewContainer.style.display = 'block';
                 showMessage('✅ Tarjeta generada correctamente', 'success');
-                
-                // Preparar la tarjeta para descarga
-                await prepareCardForDownload();
                 
             } catch (error) {
                 console.error('Error generando tarjeta:', error);
@@ -509,156 +638,48 @@
             }
         }
 
-        async function prepareCardForDownload() {
-            // Esperar un momento para asegurar que todo esté renderizado
-            await new Promise(r => setTimeout(r, 200));
-            
-            // Clonar la tarjeta completa
-            const originalCard = document.getElementById('qrCard');
-            const cloneCard = originalCard.cloneNode(true);
-            
-            // Asegurar estilos para la captura
-            cloneCard.style.position = 'fixed';
-            cloneCard.style.left = '-9999px';
-            cloneCard.style.top = '0';
-            cloneCard.style.width = '320px';
-            cloneCard.style.backgroundColor = '#F2C200';
-            cloneCard.style.borderRadius = '16px';
-            cloneCard.style.padding = '20px';
-            cloneCard.style.margin = '0';
-            cloneCard.style.display = 'block';
-            
-            // Asegurar que el QR en el clon tenga el canvas correcto
-            const cloneQRDiv = cloneCard.querySelector('.qr-code');
-            if (cloneQRDiv && currentQRCanvas) {
-                cloneQRDiv.innerHTML = '';
-                const clonedCanvas = document.createElement('canvas');
-                clonedCanvas.width = currentQRCanvas.width;
-                clonedCanvas.height = currentQRCanvas.height;
-                const ctx = clonedCanvas.getContext('2d');
-                ctx.drawImage(currentQRCanvas, 0, 0);
-                clonedCanvas.style.width = '180px';
-                clonedCanvas.style.height = '180px';
-                clonedCanvas.style.border = '3px solid white';
-                clonedCanvas.style.borderRadius = '16px';
-                clonedCanvas.style.padding = '8px';
-                clonedCanvas.style.background = 'white';
-                cloneQRDiv.appendChild(clonedCanvas);
-            }
-            
-            // Asegurar estilos de los elementos internos
-            const numberDiv = cloneCard.querySelector('.qr-number');
-            if (numberDiv) numberDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-            
-            const codeDiv = cloneCard.querySelector('.qr-code-value');
-            if (codeDiv) codeDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            
-            const descDiv = cloneCard.querySelector('.qr-description');
-            if (descDiv) descDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-            
-            document.body.appendChild(cloneCard);
-            
-            // Esperar a que el DOM se actualice
-            await new Promise(r => setTimeout(r, 100));
-            
-            try {
-                const canvas = await html2canvas(cloneCard, {
-                    scale: 2.5,
-                    backgroundColor: '#F2C200',
-                    logging: false,
-                    useCORS: true,
-                    allowTaint: false
-                });
-                currentCardCanvas = canvas;
-            } catch (error) {
-                console.error('Error en html2canvas:', error);
-                // Fallback: crear un canvas simple con los datos
-                currentCardCanvas = await createFallbackCanvas();
-            }
-            
-            // Limpiar el clon
-            document.body.removeChild(cloneCard);
-        }
-
-        async function createFallbackCanvas() {
-            // Canvas alternativo si html2canvas falla
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 640;
-            canvas.height = 640;
-            
-            // Fondo
-            ctx.fillStyle = '#F2C200';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Número
-            ctx.fillStyle = '#1a1a2e';
-            ctx.font = 'bold 30px monospace';
-            ctx.fillText(document.getElementById('idActivo').value, canvas.width/2 - 50, 80);
-            
-            // QR (si está disponible)
-            if (currentQRCanvas) {
-                ctx.drawImage(currentQRCanvas, canvas.width/2 - 100, 120, 200, 200);
-            }
-            
-            // Código
-            ctx.font = 'bold 20px monospace';
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillText(document.getElementById('codigoId').value, canvas.width/2 - 100, 400);
-            
-            // Descripción
-            ctx.font = '16px monospace';
-            ctx.fillStyle = '#1a1a2e';
-            const desc = document.getElementById('descripcion').value || 'Sin descripción';
-            ctx.fillText(desc.substring(0, 40), canvas.width/2 - 150, 480);
-            
-            return canvas;
-        }
-
         async function downloadCard() {
-            if (!currentCardCanvas) {
+            if (!currentImageData) {
                 showMessage('❌ Primero genera una tarjeta', 'error');
                 return;
             }
             
-            const codigoId = document.getElementById('codigoId').value;
-            let fileName = codigoId.replace(/[<>:"/\\|?*]/g, '_');
-            fileName = fileName.replace(/\s+/g, ' ').trim();
+            const fileName = currentCodigoId.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, ' ') + '.png';
             
             const link = document.createElement('a');
-            link.download = `${fileName}.png`;
-            link.href = currentCardCanvas.toDataURL();
+            link.download = fileName;
+            link.href = currentImageData;
             link.click();
             
             showMessage('📥 Tarjeta descargada', 'success');
         }
 
         async function shareCard() {
-            if (!currentCardCanvas) {
+            if (!currentImageData) {
                 showMessage('❌ Primero genera una tarjeta', 'error');
                 return;
             }
             
-            if (navigator.share) {
+            // Convertir dataURL a blob
+            const blob = await (await fetch(currentImageData)).blob();
+            const file = new File([blob], 'tarjeta_qr.png', { type: 'image/png' });
+            
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
-                    const blob = await new Promise(resolve => currentCardCanvas.toBlob(resolve, 'image/png'));
-                    const file = new File([blob], 'tarjeta_qr.png', { type: 'image/png' });
-                    
                     await navigator.share({
                         title: 'Tarjeta QR',
-                        text: `Código: ${document.getElementById('codigoId').value}`,
+                        text: `Código: ${currentCodigoId}`,
                         files: [file]
                     });
                     showMessage('📤 Tarjeta compartida', 'success');
                 } catch (error) {
                     if (error.name !== 'AbortError') {
                         console.error('Error al compartir:', error);
-                        showMessage('❌ Error al compartir, se descargará la imagen', 'error');
-                        downloadCard();
+                        showMessage('❌ Error al compartir', 'error');
                     }
                 }
             } else {
-                showMessage('📱 Tu navegador no soporta compartir. Se descargará la imagen.', 'info');
+                showMessage('📱 Tu navegador no soporta compartir archivos. Se descargará la imagen.', 'info');
                 downloadCard();
             }
         }
