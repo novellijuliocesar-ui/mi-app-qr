@@ -138,7 +138,7 @@
             background: #f8f9fa;
         }
 
-        /* Vista previa de la tarjeta - ESTILOS VISUALES */
+        /* Vista previa de la tarjeta */
         .preview-container {
             background: white;
             border-radius: 20px;
@@ -157,69 +157,6 @@
             border-bottom: 1px solid #eee;
         }
 
-        /* Este es el estilo exacto que se usará para la descarga */
-        .qr-card-for-export {
-            background: #F2C200;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            width: 320px;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
-
-        .qr-number-for-export {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1a1a2e;
-            background: rgba(255, 255, 255, 0.8);
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 25px;
-            margin-bottom: 15px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .qr-code-for-export {
-            margin: 15px 0;
-            display: flex;
-            justify-content: center;
-        }
-
-        .qr-code-for-export canvas {
-            width: 180px;
-            height: 180px;
-            border: 3px solid white;
-            border-radius: 16px;
-            padding: 8px;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .qr-code-value-for-export {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1a1a2e;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 20px;
-            margin: 10px 0;
-            word-break: break-all;
-            font-family: 'Courier New', monospace;
-        }
-
-        .qr-description-for-export {
-            font-size: 11px;
-            color: #1a1a2e;
-            margin-top: 8px;
-            line-height: 1.4;
-            font-weight: 500;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 6px 10px;
-            border-radius: 12px;
-        }
-
-        /* Estilos para la vista previa en pantalla (mismo que export) */
         .preview-card {
             background: #F2C200;
             border-radius: 16px;
@@ -335,14 +272,6 @@
             margin: 0 auto 10px;
         }
 
-        /* Elemento oculto para exportar */
-        .export-hidden {
-            position: fixed;
-            left: -9999px;
-            top: -9999px;
-            visibility: hidden;
-        }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -442,26 +371,23 @@
         </div>
     </div>
 
-    <!-- Elemento oculto para exportar con html2canvas -->
-    <div id="exportContainer" class="export-hidden"></div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         let excelData = [];
+        let currentImageData = null; // Almacena la imagen generada en base64
         let currentIdActivo = '';
         let currentCodigoId = '';
         let currentDescripcion = '';
-        let currentQRCanvas = null;
 
         // Función para dividir texto en líneas
-        function wrapText(text, maxLength) {
+        function wrapText(ctx, text, maxWidth) {
             const words = text.split('');
             const lines = [];
             let currentLine = '';
             
             for (let char of words) {
                 let testLine = currentLine + char;
-                if (testLine.length > maxLength && currentLine.length > 0) {
+                let metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && currentLine.length > 0) {
                     lines.push(currentLine);
                     currentLine = char;
                 } else {
@@ -470,6 +396,102 @@
             }
             lines.push(currentLine);
             return lines;
+        }
+
+        // Función principal para generar la tarjeta como imagen
+        async function generateCardImage(idActivo, codigoId, descripcion) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Crear canvas para la tarjeta
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Dimensiones de la tarjeta
+                    const cardWidth = 400;
+                    const cardHeight = 520;
+                    canvas.width = cardWidth;
+                    canvas.height = cardHeight;
+                    
+                    // 1. Dibujar fondo amarillo
+                    ctx.fillStyle = '#F2C200';
+                    ctx.fillRect(0, 0, cardWidth, cardHeight);
+                    
+                    // 2. Dibujar el número (ID_ACTIVO_ARBOL)
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.font = 'bold 26px "Courier New", monospace';
+                    ctx.textAlign = 'center';
+                    
+                    // Fondo blanco semi-transparente para el número
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    const numberText = idActivo;
+                    const numberMetrics = ctx.measureText(numberText);
+                    const numberWidth = numberMetrics.width + 40;
+                    ctx.fillRect(cardWidth/2 - numberWidth/2, 15, numberWidth, 45);
+                    
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillText(numberText, cardWidth/2, 48);
+                    
+                    // 3. Generar y dibujar el QR
+                    const qrCanvas = document.createElement('canvas');
+                    await QRCode.toCanvas(qrCanvas, idActivo, {
+                        width: 200,
+                        margin: 1,
+                        color: { dark: '#000000', light: '#ffffff' }
+                    });
+                    
+                    // Dibujar QR con borde blanco
+                    const qrSize = 200;
+                    const qrX = (cardWidth - qrSize) / 2;
+                    const qrY = 75;
+                    
+                    // Borde blanco detrás del QR
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16);
+                    
+                    // Dibujar QR
+                    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+                    
+                    // 4. Dibujar el código identificativo
+                    ctx.font = 'bold 16px "Courier New", monospace';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    const codeText = codigoId;
+                    const codeMetrics = ctx.measureText(codeText);
+                    const codeWidth = codeMetrics.width + 30;
+                    ctx.fillRect(cardWidth/2 - codeWidth/2, 295, codeWidth, 35);
+                    
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillText(codeText, cardWidth/2, 320);
+                    
+                    // 5. Dibujar la descripción (con ajuste de línea)
+                    ctx.font = '13px "Segoe UI", monospace';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    
+                    const descText = descripcion || 'Sin descripción';
+                    const maxWidth = cardWidth - 60;
+                    const lines = wrapText(ctx, descText, maxWidth);
+                    const lineHeight = 22;
+                    const startY = 365;
+                    
+                    // Fondo para la descripción
+                    const descHeight = (lines.length * lineHeight) + 20;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.fillRect(20, startY - 10, cardWidth - 40, descHeight);
+                    
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.textAlign = 'center';
+                    lines.forEach((line, index) => {
+                        ctx.fillText(line, cardWidth/2, startY + (index * lineHeight));
+                    });
+                    
+                    // Convertir a dataURL
+                    const imageData = canvas.toDataURL('image/png');
+                    resolve(imageData);
+                    
+                } catch (error) {
+                    console.error('Error generando imagen:', error);
+                    reject(error);
+                }
+            });
         }
 
         // Actualizar vista previa con el QR
@@ -486,134 +508,10 @@
             });
             previewQrDiv.appendChild(qrCanvas);
             
-            // Guardar referencia del QR
-            currentQRCanvas = qrCanvas;
-            
             // Actualizar textos
             document.getElementById('previewNumber').textContent = idActivo;
             document.getElementById('previewCode').textContent = codigoId;
-            
-            // Manejar descripción larga
-            const descElement = document.getElementById('previewDesc');
-            if (descripcion && descripcion.length > 60) {
-                const lines = wrapText(descripcion, 45);
-                descElement.innerHTML = lines.join('<br>');
-            } else {
-                descElement.textContent = descripcion || 'Sin descripción';
-            }
-        }
-
-        // Crear elemento de exportación idéntico a la vista previa
-        async function createExportElement(idActivo, codigoId, descripcion) {
-            const container = document.getElementById('exportContainer');
-            container.innerHTML = '';
-            
-            // Crear la tarjeta con las mismas clases que la vista previa
-            const card = document.createElement('div');
-            card.className = 'qr-card-for-export';
-            card.style.width = '320px';
-            card.style.backgroundColor = '#F2C200';
-            card.style.borderRadius = '16px';
-            card.style.padding = '20px';
-            card.style.textAlign = 'center';
-            card.style.boxSizing = 'border-box';
-            
-            // Número
-            const numberDiv = document.createElement('div');
-            numberDiv.className = 'qr-number-for-export';
-            numberDiv.textContent = idActivo;
-            numberDiv.style.fontSize = '20px';
-            numberDiv.style.fontWeight = 'bold';
-            numberDiv.style.color = '#1a1a2e';
-            numberDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-            numberDiv.style.display = 'inline-block';
-            numberDiv.style.padding = '8px 16px';
-            numberDiv.style.borderRadius = '25px';
-            numberDiv.style.marginBottom = '15px';
-            numberDiv.style.fontFamily = "'Courier New', monospace";
-            card.appendChild(numberDiv);
-            
-            // QR
-            const qrDiv = document.createElement('div');
-            qrDiv.className = 'qr-code-for-export';
-            qrDiv.style.margin = '15px 0';
-            qrDiv.style.display = 'flex';
-            qrDiv.style.justifyContent = 'center';
-            
-            const qrCanvas = document.createElement('canvas');
-            await QRCode.toCanvas(qrCanvas, idActivo, {
-                width: 180,
-                margin: 1,
-                color: { dark: '#000000', light: '#ffffff' }
-            });
-            qrCanvas.style.width = '180px';
-            qrCanvas.style.height = '180px';
-            qrCanvas.style.border = '3px solid white';
-            qrCanvas.style.borderRadius = '16px';
-            qrCanvas.style.padding = '8px';
-            qrCanvas.style.backgroundColor = 'white';
-            qrCanvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-            qrDiv.appendChild(qrCanvas);
-            card.appendChild(qrDiv);
-            
-            // Código identificativo
-            const codeDiv = document.createElement('div');
-            codeDiv.className = 'qr-code-value-for-export';
-            codeDiv.textContent = codigoId;
-            codeDiv.style.fontSize = '13px';
-            codeDiv.style.fontWeight = '700';
-            codeDiv.style.color = '#1a1a2e';
-            codeDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            codeDiv.style.padding = '8px 12px';
-            codeDiv.style.borderRadius = '20px';
-            codeDiv.style.margin = '10px 0';
-            codeDiv.style.wordBreak = 'break-all';
-            codeDiv.style.fontFamily = "'Courier New', monospace";
-            card.appendChild(codeDiv);
-            
-            // Descripción
-            const descDiv = document.createElement('div');
-            descDiv.className = 'qr-description-for-export';
-            if (descripcion && descripcion.length > 60) {
-                const lines = wrapText(descripcion, 45);
-                descDiv.innerHTML = lines.join('<br>');
-            } else {
-                descDiv.textContent = descripcion || 'Sin descripción';
-            }
-            descDiv.style.fontSize = '11px';
-            descDiv.style.color = '#1a1a2e';
-            descDiv.style.marginTop = '8px';
-            descDiv.style.lineHeight = '1.4';
-            descDiv.style.fontWeight = '500';
-            descDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-            descDiv.style.padding = '6px 10px';
-            descDiv.style.borderRadius = '12px';
-            card.appendChild(descDiv);
-            
-            container.appendChild(card);
-            return card;
-        }
-
-        // Exportar tarjeta como imagen usando html2canvas
-        async function exportCardAsImage() {
-            if (!currentIdActivo) {
-                throw new Error('No hay tarjeta generada');
-            }
-            
-            const card = await createExportElement(currentIdActivo, currentCodigoId, currentDescripcion);
-            
-            // Esperar a que se renderice
-            await new Promise(r => setTimeout(r, 100));
-            
-            const canvas = await html2canvas(card, {
-                scale: 2.5,
-                backgroundColor: '#F2C200',
-                logging: false,
-                useCORS: true,
-                allowTaint: false
-            });
-            
-            return canvas.toDataURL('image/png');
+            document.getElementById('previewDesc').textContent = descripcion || 'Sin descripción';
         }
 
         // Cargar datos del Excel
@@ -726,6 +624,9 @@
                 // Actualizar vista previa
                 await updatePreview(idActivo, codigoId, descripcion);
                 
+                // Generar imagen para descarga
+                currentImageData = await generateCardImage(idActivo, codigoId, descripcion);
+                
                 previewContainer.style.display = 'block';
                 showMessage('✅ Tarjeta generada correctamente', 'success');
                 
@@ -738,58 +639,48 @@
         }
 
         async function downloadCard() {
-            if (!currentIdActivo) {
+            if (!currentImageData) {
                 showMessage('❌ Primero genera una tarjeta', 'error');
                 return;
             }
             
-            showMessage('🔄 Generando imagen para descargar...', 'info');
+            const fileName = currentCodigoId.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, ' ') + '.png';
             
-            try {
-                const imageData = await exportCardAsImage();
-                const fileName = currentCodigoId.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, ' ') + '.png';
-                
-                const link = document.createElement('a');
-                link.download = fileName;
-                link.href = imageData;
-                link.click();
-                
-                showMessage('📥 Tarjeta descargada', 'success');
-            } catch (error) {
-                console.error('Error descargando:', error);
-                showMessage('❌ Error al descargar la tarjeta', 'error');
-            }
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = currentImageData;
+            link.click();
+            
+            showMessage('📥 Tarjeta descargada', 'success');
         }
 
         async function shareCard() {
-            if (!currentIdActivo) {
+            if (!currentImageData) {
                 showMessage('❌ Primero genera una tarjeta', 'error');
                 return;
             }
             
-            showMessage('🔄 Preparando para compartir...', 'info');
+            // Convertir dataURL a blob
+            const blob = await (await fetch(currentImageData)).blob();
+            const file = new File([blob], 'tarjeta_qr.png', { type: 'image/png' });
             
-            try {
-                const imageData = await exportCardAsImage();
-                const blob = await (await fetch(imageData)).blob();
-                const file = new File([blob], 'tarjeta_qr.png', { type: 'image/png' });
-                
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
                     await navigator.share({
                         title: 'Tarjeta QR',
                         text: `Código: ${currentCodigoId}`,
                         files: [file]
                     });
                     showMessage('📤 Tarjeta compartida', 'success');
-                } else {
-                    showMessage('📱 Tu navegador no soporta compartir archivos. Se descargará la imagen.', 'info');
-                    downloadCard();
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Error al compartir:', error);
+                        showMessage('❌ Error al compartir', 'error');
+                    }
                 }
-            } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error('Error al compartir:', error);
-                    showMessage('❌ Error al compartir la tarjeta', 'error');
-                }
+            } else {
+                showMessage('📱 Tu navegador no soporta compartir archivos. Se descargará la imagen.', 'info');
+                downloadCard();
             }
         }
 
