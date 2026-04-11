@@ -4,31 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#F2C200">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Generador de Tarjetas QR</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f5f5;
-            min-height: 100vh;
             padding: 16px;
         }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 600px; margin: 0 auto; }
         .header {
             background: #F2C200;
             border-radius: 20px;
@@ -37,19 +24,8 @@
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-
-        .header h1 {
-            font-size: 1.5rem;
-            color: #1a1a2e;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            font-size: 0.8rem;
-            color: #1a1a2e;
-            opacity: 0.8;
-        }
-
+        .header h1 { font-size: 1.5rem; color: #1a1a2e; }
+        .header p { font-size: 0.8rem; color: #1a1a2e; opacity: 0.8; }
         .form-card {
             background: white;
             border-radius: 20px;
@@ -57,39 +33,18 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 5px; }
         input, select, textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
             font-size: 1rem;
-            transition: all 0.3s;
             font-family: inherit;
         }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #F2C200;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #F2C200; }
+        textarea { resize: vertical; min-height: 60px; }
         .btn {
             width: 100%;
             padding: 14px;
@@ -101,43 +56,10 @@
             transition: all 0.3s;
             margin-top: 10px;
         }
-
-        .btn-primary {
-            background: #F2C200;
-            color: #1a1a2e;
-        }
-
-        .btn-primary:hover {
-            background: #e0b000;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #1a1a2e;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #16213e;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .search-section {
-            margin-bottom: 15px;
-        }
-
-        .search-select {
-            background: #f8f9fa;
-        }
-
+        .btn-primary { background: #F2C200; color: #1a1a2e; }
+        .btn-secondary { background: #1a1a2e; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .search-section { margin-bottom: 15px; }
         .preview-container {
             background: white;
             border-radius: 20px;
@@ -147,15 +69,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: none;
         }
-
-        .preview-title {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
+        .preview-title { font-size: 0.9rem; color: #666; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .preview-card {
             background: #F2C200;
             border-radius: 16px;
@@ -166,7 +80,6 @@
             max-width: 320px;
             margin: 0 auto;
         }
-
         .preview-number {
             font-size: 20px;
             font-weight: bold;
@@ -178,13 +91,7 @@
             margin-bottom: 15px;
             font-family: 'Courier New', monospace;
         }
-
-        .preview-qr {
-            margin: 15px 0;
-            display: flex;
-            justify-content: center;
-        }
-
+        .preview-qr { margin: 15px 0; display: flex; justify-content: center; }
         .preview-qr canvas {
             width: 180px;
             height: 180px;
@@ -192,9 +99,7 @@
             border-radius: 16px;
             padding: 8px;
             background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-
         .preview-code {
             font-size: 13px;
             font-weight: 700;
@@ -204,66 +109,24 @@
             padding: 8px 16px;
             border-radius: 25px;
             margin: 10px 0;
-            word-break: break-all;
             font-family: 'Courier New', monospace;
         }
-
         .preview-desc {
             font-size: 11px;
             color: #1a1a2e;
-            margin-top: 8px;
-            line-height: 1.4;
-            font-weight: 500;
             background: rgba(255, 255, 255, 0.7);
             display: inline-block;
             padding: 8px 12px;
             border-radius: 16px;
             max-width: 90%;
         }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .action-buttons .btn {
-            flex: 1;
-            margin-top: 0;
-        }
-
-        .message {
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            font-size: 0.85rem;
-            display: none;
-        }
-
-        .message-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-
-        .message-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-
-        .message-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
+        .action-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .action-buttons .btn { flex: 1; margin-top: 0; }
+        .message { padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; }
+        .message-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .message-error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .message-info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        .loading { display: none; text-align: center; padding: 20px; }
         .spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #F2C200;
@@ -273,23 +136,10 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 10px;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media (max-width: 480px) {
-            body { padding: 12px; }
             .preview-card { max-width: 280px; }
             .preview-qr canvas { width: 150px; height: 150px; }
-            .preview-number { font-size: 16px; }
-            .preview-code { font-size: 11px; }
-        }
-
-        @media (min-width: 768px) {
-            .container { max-width: 800px; }
-            .form-card { padding: 30px; }
         }
     </style>
 </head>
@@ -304,37 +154,32 @@
 
         <div class="form-card">
             <div class="search-section">
-                <label>🔍 Buscar por Código o Descripción</label>
+                <label>🔍 Buscar</label>
                 <input type="text" id="searchInput" placeholder="Escribe para buscar..." autocomplete="off">
             </div>
-
             <div class="form-group">
                 <label>📋 Seleccionar activo</label>
-                <select id="activoSelect" class="search-select">
-                    <option value="">-- Cargando datos... --</option>
+                <select id="activoSelect">
+                    <option value="">-- Cargando... --</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label>🆔 ID ACTIVO ARBOL</label>
-                <input type="text" id="idActivo" placeholder="ID del activo" readonly>
+                <label>🆔 ID ACTIVO</label>
+                <input type="text" id="idActivo" readonly>
             </div>
-
             <div class="form-group">
-                <label>🏷️ CÓDIGO IDENTIFICATIVO</label>
-                <input type="text" id="codigoId" placeholder="Código identificativo" readonly>
+                <label>🏷️ CÓDIGO</label>
+                <input type="text" id="codigoId" readonly>
             </div>
-
             <div class="form-group">
                 <label>📝 DESCRIPCIÓN</label>
-                <textarea id="descripcion" placeholder="Descripción" readonly></textarea>
+                <textarea id="descripcion" readonly></textarea>
             </div>
-
-            <button class="btn btn-primary" id="generateBtn">✨ Generar Tarjeta QR</button>
+            <button class="btn btn-primary" id="generateBtn">✨ Generar Tarjeta</button>
         </div>
 
         <div id="previewContainer" class="preview-container">
-            <div class="preview-title">📋 Vista previa de la tarjeta</div>
+            <div class="preview-title">📋 Vista previa</div>
             <div id="previewCard" class="preview-card">
                 <div id="previewNumber" class="preview-number"></div>
                 <div id="previewQr" class="preview-qr"></div>
@@ -342,395 +187,275 @@
                 <div id="previewDesc" class="preview-desc"></div>
             </div>
             <div class="action-buttons">
-                <button class="btn btn-secondary" id="downloadBtn">📥 Descargar Tarjeta</button>
+                <button class="btn btn-secondary" id="downloadBtn">📥 Descargar</button>
                 <button class="btn btn-success" id="shareBtn">📤 Compartir</button>
             </div>
         </div>
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Generando tarjeta...</p>
+            <p>Generando...</p>
         </div>
     </div>
 
     <script>
         let excelData = [];
-        let currentIdActivo = '';
-        let currentCodigoId = '';
-        let currentDescripcion = '';
+        let currentId = '', currentCode = '', currentDesc = '';
+        let cachedImage = null;
 
-        // Función para dibujar rectángulo con bordes redondeados
-        function roundedRect(ctx, x, y, width, height, radius) {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            ctx.fill();
-        }
+        // ========== FUNCIÓN PRINCIPAL QUE SÍ FUNCIONA ==========
+        async function generarImagenTarjeta(id, codigo, descripcion) {
+            return new Promise(async (resolve) => {
+                // Crear canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = 400;
+                canvas.height = 540;
+                const ctx = canvas.getContext('2d');
 
-        // Función para dividir texto en líneas
-        function wrapText(ctx, text, maxWidth) {
-            const words = text.split('');
-            const lines = [];
-            let currentLine = '';
-            
-            for (let char of words) {
-                let testLine = currentLine + char;
-                let metrics = ctx.measureText(testLine);
-                if (metrics.width > maxWidth && currentLine.length > 0) {
-                    lines.push(currentLine);
-                    currentLine = char;
-                } else {
-                    currentLine = testLine;
+                // 1. Fondo amarillo
+                ctx.fillStyle = '#F2C200';
+                ctx.fillRect(0, 0, 400, 540);
+
+                // 2. Número (con bordes redondeados)
+                ctx.font = 'bold 26px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                const numTexto = id;
+                const numWidth = ctx.measureText(numTexto).width + 50;
+                
+                // Dibujar fondo redondeado del número
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.beginPath();
+                ctx.moveTo(200 - numWidth/2 + 24, 20);
+                ctx.lineTo(200 + numWidth/2 - 24, 20);
+                ctx.quadraticCurveTo(200 + numWidth/2, 20, 200 + numWidth/2, 20 + 24);
+                ctx.lineTo(200 + numWidth/2, 20 + 48 - 24);
+                ctx.quadraticCurveTo(200 + numWidth/2, 20 + 48, 200 + numWidth/2 - 24, 20 + 48);
+                ctx.lineTo(200 - numWidth/2 + 24, 20 + 48);
+                ctx.quadraticCurveTo(200 - numWidth/2, 20 + 48, 200 - numWidth/2, 20 + 48 - 24);
+                ctx.lineTo(200 - numWidth/2, 20 + 24);
+                ctx.quadraticCurveTo(200 - numWidth/2, 20, 200 - numWidth/2 + 24, 20);
+                ctx.fill();
+                
+                // Texto del número
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillText(numTexto, 200, 52);
+
+                // 3. Generar QR
+                const qrCanvas = document.createElement('canvas');
+                await QRCode.toCanvas(qrCanvas, id, { width: 200, margin: 1 });
+                
+                // Borde blanco redondeado del QR
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.moveTo(200 - 110, 82 - 10 + 20);
+                ctx.lineTo(200 + 110, 82 - 10 + 20);
+                ctx.quadraticCurveTo(200 + 110, 82 - 10, 200 + 110 - 20, 82 - 10);
+                ctx.lineTo(200 - 110 + 20, 82 - 10);
+                ctx.quadraticCurveTo(200 - 110, 82 - 10, 200 - 110, 82 - 10 + 20);
+                ctx.lineTo(200 - 110, 82 + 200 + 10 - 20);
+                ctx.quadraticCurveTo(200 - 110, 82 + 200 + 10, 200 - 110 + 20, 82 + 200 + 10);
+                ctx.lineTo(200 + 110 - 20, 82 + 200 + 10);
+                ctx.quadraticCurveTo(200 + 110, 82 + 200 + 10, 200 + 110, 82 + 200 + 10 - 20);
+                ctx.lineTo(200 + 110, 82 - 10 + 20);
+                ctx.fill();
+                
+                // Dibujar QR
+                ctx.drawImage(qrCanvas, 200 - 100, 82, 200, 200);
+
+                // 4. Código (con bordes redondeados)
+                ctx.font = 'bold 15px "Courier New", monospace';
+                const codWidth = ctx.measureText(codigo).width + 50;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                ctx.moveTo(200 - codWidth/2 + 20, 305);
+                ctx.lineTo(200 + codWidth/2 - 20, 305);
+                ctx.quadraticCurveTo(200 + codWidth/2, 305, 200 + codWidth/2, 305 + 20);
+                ctx.lineTo(200 + codWidth/2, 305 + 40 - 20);
+                ctx.quadraticCurveTo(200 + codWidth/2, 305 + 40, 200 + codWidth/2 - 20, 305 + 40);
+                ctx.lineTo(200 - codWidth/2 + 20, 305 + 40);
+                ctx.quadraticCurveTo(200 - codWidth/2, 305 + 40, 200 - codWidth/2, 305 + 40 - 20);
+                ctx.lineTo(200 - codWidth/2, 305 + 20);
+                ctx.quadraticCurveTo(200 - codWidth/2, 305, 200 - codWidth/2 + 20, 305);
+                ctx.fill();
+                
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillText(codigo, 200, 333);
+
+                // 5. Descripción (con bordes redondeados y ajuste de líneas)
+                ctx.font = '12px "Segoe UI", monospace';
+                const descTexto = descripcion || 'Sin descripción';
+                const maxWidth = 300;
+                let lines = [];
+                let currentLine = '';
+                
+                for (let char of descTexto) {
+                    let testLine = currentLine + char;
+                    if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+                        lines.push(currentLine);
+                        currentLine = char;
+                    } else {
+                        currentLine = testLine;
+                    }
                 }
-            }
-            lines.push(currentLine);
-            return lines;
-        }
+                lines.push(currentLine);
+                
+                const lineHeight = 20;
+                const descHeight = (lines.length * lineHeight) + 24;
+                const descY = 365;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                ctx.beginPath();
+                ctx.moveTo(50 + 16, descY);
+                ctx.lineTo(350 - 16, descY);
+                ctx.quadraticCurveTo(350, descY, 350, descY + 16);
+                ctx.lineTo(350, descY + descHeight - 16);
+                ctx.quadraticCurveTo(350, descY + descHeight, 350 - 16, descY + descHeight);
+                ctx.lineTo(50 + 16, descY + descHeight);
+                ctx.quadraticCurveTo(50, descY + descHeight, 50, descY + descHeight - 16);
+                ctx.lineTo(50, descY + 16);
+                ctx.quadraticCurveTo(50, descY, 50 + 16, descY);
+                ctx.fill();
+                
+                ctx.fillStyle = '#1a1a2e';
+                lines.forEach((line, i) => {
+                    ctx.fillText(line, 200, descY + 20 + (i * lineHeight));
+                });
 
-        // Función principal para generar la imagen de la tarjeta
-        async function generateCardImage(idActivo, codigoId, descripcion) {
-            return new Promise(async (resolve, reject) => {
-                try {
-                    // Canvas principal
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Dimensiones
-                    const width = 400;
-                    const height = 540;
-                    canvas.width = width;
-                    canvas.height = height;
-                    
-                    // 1. Fondo amarillo
-                    ctx.fillStyle = '#F2C200';
-                    ctx.fillRect(0, 0, width, height);
-                    
-                    // 2. Número (con fondo redondeado)
-                    const numberText = idActivo;
-                    ctx.font = 'bold 26px "Courier New", monospace';
-                    ctx.textAlign = 'center';
-                    
-                    const numberMetrics = ctx.measureText(numberText);
-                    const numberWidth = numberMetrics.width + 50;
-                    const numberHeight = 48;
-                    const numberX = (width - numberWidth) / 2;
-                    const numberY = 18;
-                    
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                    roundedRect(ctx, numberX, numberY, numberWidth, numberHeight, 24);
-                    
-                    ctx.fillStyle = '#1a1a2e';
-                    ctx.fillText(numberText, width / 2, numberY + 33);
-                    
-                    // 3. QR con borde blanco redondeado
-                    const qrSize = 200;
-                    const qrX = (width - qrSize) / 2;
-                    const qrY = 82;
-                    
-                    const qrCanvas = document.createElement('canvas');
-                    await QRCode.toCanvas(qrCanvas, idActivo, {
-                        width: qrSize,
-                        margin: 1,
-                        color: { dark: '#000000', light: '#ffffff' }
-                    });
-                    
-                    // Borde blanco redondeado
-                    ctx.fillStyle = '#FFFFFF';
-                    roundedRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 20);
-                    
-                    // QR
-                    ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-                    
-                    // 4. Código identificativo (con fondo redondeado)
-                    const codeText = codigoId;
-                    ctx.font = 'bold 15px "Courier New", monospace';
-                    const codeMetrics = ctx.measureText(codeText);
-                    const codeWidth = codeMetrics.width + 50;
-                    const codeHeight = 40;
-                    const codeX = (width - codeWidth) / 2;
-                    const codeY = 305;
-                    
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    roundedRect(ctx, codeX, codeY, codeWidth, codeHeight, 20);
-                    
-                    ctx.fillStyle = '#1a1a2e';
-                    ctx.fillText(codeText, width / 2, codeY + 27);
-                    
-                    // 5. Descripción (con fondo redondeado y múltiples líneas)
-                    const descText = descripcion || 'Sin descripción';
-                    ctx.font = '12px "Segoe UI", monospace';
-                    
-                    const maxDescWidth = width - 80;
-                    const lines = wrapText(ctx, descText, maxDescWidth);
-                    const lineHeight = 20;
-                    const descPadding = 12;
-                    const descStartY = 365;
-                    
-                    const descTextHeight = lines.length * lineHeight;
-                    const descHeight = descTextHeight + (descPadding * 2);
-                    const descWidth = width - 50;
-                    const descX = (width - descWidth) / 2;
-                    
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-                    roundedRect(ctx, descX, descStartY - 8, descWidth, descHeight, 16);
-                    
-                    ctx.fillStyle = '#1a1a2e';
-                    ctx.textAlign = 'center';
-                    lines.forEach((line, index) => {
-                        ctx.fillText(line, width / 2, descStartY + (index * lineHeight) + 10);
-                    });
-                    
-                    // Convertir a PNG
-                    const imageData = canvas.toDataURL('image/png');
-                    resolve(imageData);
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    reject(error);
-                }
+                resolve(canvas.toDataURL('image/png'));
             });
         }
 
         // Actualizar vista previa
-        async function updatePreview(idActivo, codigoId, descripcion) {
-            const previewQrDiv = document.getElementById('previewQr');
-            previewQrDiv.innerHTML = '';
-            
+        async function actualizarPreview(id, codigo, descripcion) {
+            const previewQr = document.getElementById('previewQr');
+            previewQr.innerHTML = '';
             const qrCanvas = document.createElement('canvas');
-            await QRCode.toCanvas(qrCanvas, idActivo, {
-                width: 180,
-                margin: 1,
-                color: { dark: '#000000', light: '#ffffff' }
-            });
-            previewQrDiv.appendChild(qrCanvas);
-            
-            document.getElementById('previewNumber').textContent = idActivo;
-            document.getElementById('previewCode').textContent = codigoId;
-            
-            const descElement = document.getElementById('previewDesc');
-            if (descripcion && descripcion.length > 55) {
-                const words = descripcion.split('');
-                let lines = [];
-                let currentLine = '';
-                for (let char of words) {
-                    if ((currentLine + char).length > 45 && currentLine.length > 0) {
-                        lines.push(currentLine);
-                        currentLine = char;
-                    } else {
-                        currentLine += char;
-                    }
-                }
-                lines.push(currentLine);
-                descElement.innerHTML = lines.join('<br>');
-            } else {
-                descElement.textContent = descripcion || 'Sin descripción';
-            }
+            await QRCode.toCanvas(qrCanvas, id, { width: 180, margin: 1 });
+            previewQr.appendChild(qrCanvas);
+            document.getElementById('previewNumber').textContent = id;
+            document.getElementById('previewCode').textContent = codigo;
+            document.getElementById('previewDesc').textContent = descripcion || 'Sin descripción';
         }
 
-        // Cargar datos del Excel
-        async function loadExcelData() {
-            showMessage('Cargando base de datos...', 'info');
-            
+        // Cargar Excel
+        async function cargarExcel() {
+            mostrarMensaje('Cargando...', 'info');
             try {
                 const response = await fetch('data/DOC-20251215-WA0003..xlsx');
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                
-                excelData = jsonData.filter(row => 
-                    row.ID_ACTIVO_ARBOL && row.CODIGO_IDENTIFICATIVO
-                ).map(row => ({
-                    id: typeof row.ID_ACTIVO_ARBOL === 'number' ? Math.floor(row.ID_ACTIVO_ARBOL).toString() : String(row.ID_ACTIVO_ARBOL),
-                    codigo: String(row.CODIGO_IDENTIFICATIVO).trim(),
-                    descripcion: row.DESCRIPCION ? String(row.DESCRIPCION).trim() : 'Sin descripción'
+                const data = await response.arrayBuffer();
+                const workbook = XLSX.read(data);
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                excelData = json.filter(r => r.ID_ACTIVO_ARBOL && r.CODIGO_IDENTIFICATIVO).map(r => ({
+                    id: Math.floor(Number(r.ID_ACTIVO_ARBOL)).toString(),
+                    codigo: String(r.CODIGO_IDENTIFICATIVO).trim(),
+                    desc: r.DESCRIPCION ? String(r.DESCRIPCION).trim() : 'Sin descripción'
                 }));
-                
-                populateSelect();
-                showMessage(`✅ ${excelData.length} activos cargados`, 'success');
-            } catch (error) {
-                showMessage('⚠️ No se pudo cargar el Excel. Puedes ingresar datos manualmente.', 'error');
+                const select = document.getElementById('activoSelect');
+                select.innerHTML = '<option value="">-- Seleccionar --</option>';
+                excelData.forEach((item, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `${item.codigo} - ${item.desc.substring(0, 50)}`;
+                    select.appendChild(opt);
+                });
+                mostrarMensaje(`✅ ${excelData.length} activos cargados`, 'success');
+            } catch(e) {
+                mostrarMensaje('⚠️ No se pudo cargar el Excel. Puedes ingresar datos manualmente.', 'error');
                 document.getElementById('idActivo').readOnly = false;
                 document.getElementById('codigoId').readOnly = false;
                 document.getElementById('descripcion').readOnly = false;
             }
         }
 
-        function populateSelect() {
+        function mostrarMensaje(texto, tipo) {
+            const msg = document.getElementById('message');
+            msg.textContent = texto;
+            msg.className = `message message-${tipo}`;
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+        }
+
+        // Eventos
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const term = this.value.toLowerCase();
             const select = document.getElementById('activoSelect');
-            select.innerHTML = '<option value="">-- Selecciona un activo --</option>';
-            
-            excelData.forEach((item, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
-                select.appendChild(option);
+            if (!term) {
+                select.innerHTML = '<option value="">-- Seleccionar --</option>';
+                excelData.forEach((item, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `${item.codigo} - ${item.desc.substring(0, 50)}`;
+                    select.appendChild(opt);
+                });
+                return;
+            }
+            const filtrados = excelData.filter(item => item.codigo.toLowerCase().includes(term) || item.desc.toLowerCase().includes(term));
+            select.innerHTML = '<option value="">-- Seleccionar --</option>';
+            filtrados.forEach(item => {
+                const idx = excelData.findIndex(original => original.codigo === item.codigo);
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `${item.codigo} - ${item.desc.substring(0, 50)}`;
+                select.appendChild(opt);
             });
-        }
+        });
 
-        function searchActivos() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const select = document.getElementById('activoSelect');
-            
-            if (!searchTerm) {
-                populateSelect();
+        document.getElementById('activoSelect').addEventListener('change', function() {
+            const idx = this.value;
+            if (idx === "" || !excelData[idx]) return;
+            const item = excelData[idx];
+            document.getElementById('idActivo').value = item.id;
+            document.getElementById('codigoId').value = item.codigo;
+            document.getElementById('descripcion').value = item.desc;
+        });
+
+        document.getElementById('generateBtn').addEventListener('click', async function() {
+            const id = document.getElementById('idActivo').value;
+            const codigo = document.getElementById('codigoId').value;
+            const desc = document.getElementById('descripcion').value;
+            if (!id || !codigo) {
+                mostrarMensaje('❌ Selecciona un activo', 'error');
                 return;
             }
-            
-            const filtered = excelData.filter(item => 
-                item.codigo.toLowerCase().includes(searchTerm) || 
-                item.descripcion.toLowerCase().includes(searchTerm)
-            );
-            
-            select.innerHTML = '<option value="">-- Selecciona un activo --</option>';
-            filtered.forEach((item) => {
-                const originalIndex = excelData.findIndex(original => original.codigo === item.codigo);
-                const option = document.createElement('option');
-                option.value = originalIndex;
-                option.textContent = `${item.codigo} - ${item.descripcion.substring(0, 50)}${item.descripcion.length > 50 ? '...' : ''}`;
-                select.appendChild(option);
-            });
-            
-            if (filtered.length === 0) {
-                select.innerHTML = '<option value="">-- No se encontraron resultados --</option>';
-            }
-        }
-
-        function loadSelectedActivo() {
-            const select = document.getElementById('activoSelect');
-            const selectedIndex = select.value;
-            
-            if (selectedIndex === "" || !excelData[selectedIndex]) return;
-            
-            const activo = excelData[selectedIndex];
-            document.getElementById('idActivo').value = activo.id;
-            document.getElementById('codigoId').value = activo.codigo;
-            document.getElementById('descripcion').value = activo.descripcion;
-        }
-
-        async function generateQRCard() {
-            const idActivo = document.getElementById('idActivo').value;
-            const codigoId = document.getElementById('codigoId').value;
-            const descripcion = document.getElementById('descripcion').value;
-            
-            if (!idActivo || !codigoId) {
-                showMessage('❌ Selecciona un activo', 'error');
-                return;
-            }
-            
-            const loading = document.getElementById('loading');
-            const previewContainer = document.getElementById('previewContainer');
-            
-            loading.style.display = 'block';
-            previewContainer.style.display = 'none';
-            
+            currentId = id; currentCode = codigo; currentDesc = desc;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('previewContainer').style.display = 'none';
             try {
-                currentIdActivo = idActivo;
-                currentCodigoId = codigoId;
-                currentDescripcion = descripcion;
-                
-                await updatePreview(idActivo, codigoId, descripcion);
-                
-                // Pre-generar imagen
-                generateCardImage(idActivo, codigoId, descripcion).then(imgData => {
-                    window._cachedImageData = imgData;
-                }).catch(err => console.error(err));
-                
-                previewContainer.style.display = 'block';
-                showMessage('✅ Tarjeta generada', 'success');
-            } catch (error) {
-                showMessage('❌ Error al generar', 'error');
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
+                await actualizarPreview(id, codigo, desc);
+                generarImagenTarjeta(id, codigo, desc).then(img => cachedImage = img);
+                document.getElementById('previewContainer').style.display = 'block';
+                mostrarMensaje('✅ Tarjeta generada', 'success');
+            } catch(e) { mostrarMensaje('❌ Error', 'error'); }
+            finally { document.getElementById('loading').style.display = 'none'; }
+        });
 
-        async function downloadCard() {
-            if (!currentIdActivo) {
-                showMessage('❌ Primero genera una tarjeta', 'error');
-                return;
-            }
-            
-            showMessage('🔄 Generando imagen...', 'info');
-            
-            try {
-                let imageData = window._cachedImageData;
-                if (!imageData) {
-                    imageData = await generateCardImage(currentIdActivo, currentCodigoId, currentDescripcion);
-                }
-                
-                const fileName = currentCodigoId.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, ' ') + '.png';
-                const link = document.createElement('a');
-                link.download = fileName;
-                link.href = imageData;
-                link.click();
-                
-                showMessage('📥 Tarjeta descargada', 'success');
-            } catch (error) {
-                showMessage('❌ Error al descargar', 'error');
-            }
-        }
+        document.getElementById('downloadBtn').addEventListener('click', async function() {
+            if (!currentId) { mostrarMensaje('❌ Genera una tarjeta primero', 'error'); return; }
+            mostrarMensaje('🔄 Generando...', 'info');
+            let img = cachedImage;
+            if (!img) img = await generarImagenTarjeta(currentId, currentCode, currentDesc);
+            const link = document.createElement('a');
+            link.download = `${currentCode.replace(/[<>:"/\\|?*]/g, '_')}.png`;
+            link.href = img;
+            link.click();
+            mostrarMensaje('📥 Descargada', 'success');
+        });
 
-        async function shareCard() {
-            if (!currentIdActivo) {
-                showMessage('❌ Primero genera una tarjeta', 'error');
-                return;
-            }
-            
-            showMessage('🔄 Preparando...', 'info');
-            
-            try {
-                let imageData = window._cachedImageData;
-                if (!imageData) {
-                    imageData = await generateCardImage(currentIdActivo, currentCodigoId, currentDescripcion);
-                }
-                
-                const blob = await (await fetch(imageData)).blob();
-                const file = new File([blob], 'tarjeta_qr.png', { type: 'image/png' });
-                
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: 'Tarjeta QR',
-                        text: `Código: ${currentCodigoId}`,
-                        files: [file]
-                    });
-                    showMessage('📤 Tarjeta compartida', 'success');
-                } else {
-                    downloadCard();
-                }
-            } catch (error) {
-                if (error.name !== 'AbortError') {
-                    showMessage('❌ Error al compartir', 'error');
-                }
-            }
-        }
+        document.getElementById('shareBtn').addEventListener('click', async function() {
+            if (!currentId) { mostrarMensaje('❌ Genera una tarjeta primero', 'error'); return; }
+            mostrarMensaje('🔄 Preparando...', 'info');
+            let img = cachedImage;
+            if (!img) img = await generarImagenTarjeta(currentId, currentCode, currentDesc);
+            const blob = await (await fetch(img)).blob();
+            const file = new File([blob], 'tarjeta.png', { type: 'image/png' });
+            if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                await navigator.share({ title: 'Tarjeta QR', files: [file] });
+                mostrarMensaje('📤 Compartida', 'success');
+            } else { mostrarMensaje('📱 Compartir no soportado, se descargará', 'info'); document.getElementById('downloadBtn').click(); }
+        });
 
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.className = `message message-${type}`;
-            messageDiv.style.display = 'block';
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 3000);
-        }
-
-        // Event Listeners
-        document.getElementById('searchInput').addEventListener('input', searchActivos);
-        document.getElementById('activoSelect').addEventListener('change', loadSelectedActivo);
-        document.getElementById('generateBtn').addEventListener('click', generateQRCard);
-        document.getElementById('downloadBtn').addEventListener('click', downloadCard);
-        document.getElementById('shareBtn').addEventListener('click', shareCard);
-        
-        loadExcelData();
+        cargarExcel();
     </script>
 </body>
 </html>
