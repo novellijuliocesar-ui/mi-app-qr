@@ -155,7 +155,7 @@
         <div class="form-card">
             <div class="search-section">
                 <label>🔍 Buscar (por ID o Código)</label>
-                <input type="text" id="searchInput" placeholder="Ej: 162511 o CD_SALLENT..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Ej: 162511 o CD_SALLENT o TAVIL..." autocomplete="off">
             </div>
             <div class="form-group">
                 <label>📋 Seleccionar activo</label>
@@ -204,7 +204,6 @@
         let cachedImage = null;
         let searchTimeout = null;
 
-        // Función para limpiar ID (eliminar .0)
         function limpiarId(idRaw) {
             let idStr = String(idRaw);
             if (idStr.includes('.')) {
@@ -339,9 +338,13 @@
         function poblarSelect(items) {
             const select = document.getElementById('activoSelect');
             select.innerHTML = '<option value="">-- Seleccionar --</option>';
-            items.forEach((item, i) => {
+            
+            items.forEach((item) => {
                 const opt = document.createElement('option');
-                opt.value = i;
+                // Guardamos el ID real del activo como valor, no el índice
+                opt.value = item.id;
+                opt.setAttribute('data-codigo', item.codigo);
+                opt.setAttribute('data-desc', item.desc);
                 opt.textContent = `${item.codigo} - ${item.desc.substring(0, 50)}`;
                 select.appendChild(opt);
             });
@@ -379,7 +382,7 @@
             setTimeout(() => msg.style.display = 'none', 3000);
         }
 
-        // Búsqueda optimizada (con debounce)
+        // Búsqueda optimizada y CORREGIDA
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
@@ -390,23 +393,30 @@
                     return;
                 }
                 
+                // Filtrar manteniendo el objeto completo
                 const filtrados = excelData.filter(item => 
                     item.id === term || 
                     item.id.includes(term) || 
-                    item.codigo.toLowerCase().includes(term)
+                    item.codigo.toLowerCase().includes(term) ||
+                    item.desc.toLowerCase().includes(term)
                 );
                 
                 poblarSelect(filtrados);
-            }, 300); // Espera 300ms después de dejar de escribir
+            }, 300);
         });
 
+        // Al seleccionar, cargar los datos desde los atributos del option
         document.getElementById('activoSelect').addEventListener('change', function() {
-            const idx = this.value;
-            if (idx === "" || !excelData[idx]) return;
-            const item = excelData[idx];
-            document.getElementById('idActivo').value = item.id;
-            document.getElementById('codigoId').value = item.codigo;
-            document.getElementById('descripcion').value = item.desc;
+            const selectedOption = this.options[this.selectedIndex];
+            const id = selectedOption.value;
+            const codigo = selectedOption.getAttribute('data-codigo');
+            const desc = selectedOption.getAttribute('data-desc');
+            
+            if (!id || id === "") return;
+            
+            document.getElementById('idActivo').value = id;
+            document.getElementById('codigoId').value = codigo || '';
+            document.getElementById('descripcion').value = desc || '';
         });
 
         document.getElementById('generateBtn').addEventListener('click', async function() {
