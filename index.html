@@ -32,9 +32,6 @@
             --notification-bg: white;
             --notification-text: #333;
             --notification-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            --autocomplete-bg: white;
-            --autocomplete-hover: #f0f0f0;
-            --autocomplete-border: #e0e0e0;
         }
         
         /* Variables para modo oscuro */
@@ -58,29 +55,23 @@
             --notification-bg: #16213e;
             --notification-text: #eee;
             --notification-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            --autocomplete-bg: #16213e;
-            --autocomplete-hover: #0f3460;
-            --autocomplete-border: #0f3460;
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-body);
             padding: 16px;
-            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: background 0.3s ease;
-            position: relative;
         }
         
         .container { 
             max-width: 600px; 
             margin: 0 auto; 
             width: 100%;
-            position: relative;
-            z-index: 1;
         }
         
         /* Contenedor superior izquierdo para botón y notificaciones */
@@ -328,33 +319,48 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Corrección para móviles */
-        @media (max-width: 768px) {
+        /* Ajustes para móviles - mantener centrado */
+        @media (max-width: 640px) {
             body {
-                align-items: flex-start;
-                padding-top: 80px;
-                padding-bottom: 40px;
-            }
-            
-            .container {
-                margin-top: 0;
-                margin-bottom: 0;
+                padding: 16px;
+                align-items: center;
             }
             
             .top-left-container {
                 top: 10px;
                 left: 10px;
             }
+            
+            .dark-mode-toggle {
+                padding: 4px 10px;
+                font-size: 0.7rem;
+            }
+            
+            .notification {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+                max-width: 220px;
+            }
+            
+            .notification-icon {
+                font-size: 0.7rem;
+            }
+            
+            .card-qr canvas {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .card-number {
+                font-size: 20px;
+            }
         }
         
-        @media (max-width: 480px) {
-            .card-qr canvas { width: 180px; height: 180px; }
-            .card-number { font-size: 20px; }
-            .dark-mode-toggle { padding: 4px 10px; font-size: 0.7rem; }
-            .notification { padding: 5px 10px; font-size: 0.65rem; max-width: 220px; }
-            .notification-icon { font-size: 0.7rem; }
-            body {
-                padding-top: 70px;
+        /* Para pantallas muy pequeñas */
+        @media (max-width: 380px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 8px;
             }
         }
     </style>
@@ -415,7 +421,6 @@
         let currentItem = null;
         let cachedImage = null;
         let searchTimeout = null;
-        let isUpdatingFromSelect = false; // Evitar bucles infinitos
 
         // Sistema de notificaciones
         function mostrarNotificacion(texto, tipo) {
@@ -458,7 +463,6 @@
             const searchInput = document.getElementById('searchInput');
             if (searchInput.value !== id) {
                 searchInput.value = id;
-                // Resaltar visualmente
                 searchInput.classList.add('autoselected');
                 setTimeout(() => {
                     searchInput.classList.remove('autoselected');
@@ -473,53 +477,26 @@
             if (activoEncontrado) {
                 currentItem = activoEncontrado;
                 
-                // Sincronizar el select con el activo encontrado
                 const select = document.getElementById('activoSelect');
                 const index = excelData.findIndex(item => item.id === idBuscado);
                 if (index !== -1 && select.value != index) {
                     select.value = index;
                 }
                 
-                // Si es automático (viene del buscador), actualizar el campo de búsqueda con el ID
                 if (esAutomatico) {
                     actualizarCampoBusquedaConId(idBuscado);
                 }
                 
-                // Resaltar visualmente el campo de búsqueda
                 const searchInput = document.getElementById('searchInput');
                 searchInput.classList.add('autoselected');
                 setTimeout(() => {
                     searchInput.classList.remove('autoselected');
                 }, 500);
                 
-                // Mostrar notificación de autoselección
                 mostrarNotificacion(`✅ Auto-seleccionado: ${activoEncontrado.codigo}`, 'success');
                 return true;
             }
             return false;
-        }
-
-        // Función para seleccionar manualmente desde el dropdown
-        function seleccionarDesdeDropdown(index) {
-            if (index === "" || index === null || index === undefined) {
-                currentItem = null;
-                return;
-            }
-            
-            const idx = parseInt(index);
-            if (isNaN(idx) || idx < 0 || !excelData[idx]) {
-                currentItem = null;
-                return;
-            }
-            
-            currentItem = excelData[idx];
-            
-            // Actualizar el campo de búsqueda con el ID del activo seleccionado
-            actualizarCampoBusquedaConId(currentItem.id);
-            
-            // Limpiar filtros de búsqueda
-            filteredData = [];
-            poblarSelect();
         }
 
         // Modo oscuro
@@ -704,7 +681,6 @@
                 select.appendChild(opt);
             });
             
-            // Restaurar selección si es posible
             if (currentItem) {
                 const index = excelData.findIndex(item => item.id === currentItem.id);
                 if (index !== -1 && select.value != index) {
@@ -737,12 +713,11 @@
             }
         }
 
-        // Búsqueda CON AUTOSELECCIÓN Y SINCRONIZACIÓN
+        // Búsqueda CON AUTOSELECCIÓN
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const term = this.value.toLowerCase().trim();
             
-            // PRIMERO: Verificar si el término es un ID exacto que existe
             if (term && excelData.length > 0) {
                 const matchExacto = excelData.find(item => 
                     item.id === term || 
@@ -750,16 +725,13 @@
                 );
                 
                 if (matchExacto) {
-                    // Autoseleccionar automáticamente (es automático = true)
                     autoseleccionarPorId(matchExacto.id, true);
-                    // Limpiar filtros y resetear select
                     filteredData = [];
                     poblarSelect();
                     return;
                 }
             }
             
-            // Si no es match exacto, hacer búsqueda normal
             searchTimeout = setTimeout(() => {
                 if (!term) {
                     filteredData = [];
@@ -784,7 +756,7 @@
             }, 300);
         });
 
-        // Selección manual desde el select - ACTUALIZA EL CAMPO DE BÚSQUEDA
+        // Selección manual desde el select
         document.getElementById('activoSelect').addEventListener('change', function() {
             const realIndex = parseInt(this.value);
             
@@ -794,11 +766,7 @@
             }
             
             currentItem = excelData[realIndex];
-            
-            // Actualizar el campo de búsqueda con el ID del activo seleccionado
             actualizarCampoBusquedaConId(currentItem.id);
-            
-            // Limpiar filtros de búsqueda
             filteredData = [];
             poblarSelect();
         });
@@ -868,7 +836,7 @@
             }
         });
 
-        // Botón volver - Limpia ambos campos
+        // Botón volver
         document.getElementById('backBtn').addEventListener('click', function() {
             limpiarCamposSeleccion();
             document.getElementById('cardScreen').style.display = 'none';
