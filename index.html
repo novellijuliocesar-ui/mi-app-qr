@@ -66,8 +66,16 @@
             justify-content: center;
             align-items: center;
             transition: background 0.3s ease;
+            position: relative;
         }
-        .container { max-width: 600px; margin: 0 auto; width: 100%; }
+        
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
         
         /* Contenedor superior izquierdo para botón y notificaciones */
         .top-left-container {
@@ -305,13 +313,34 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
+        /* Corrección para móviles: mantener centrado */
+        @media (max-width: 768px) {
+            body {
+                align-items: flex-start;
+                padding-top: 80px;
+                padding-bottom: 40px;
+            }
+            
+            .container {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+            
+            .top-left-container {
+                top: 10px;
+                left: 10px;
+            }
+        }
+        
         @media (max-width: 480px) {
             .card-qr canvas { width: 180px; height: 180px; }
             .card-number { font-size: 20px; }
-            .top-left-container { top: 10px; left: 10px; }
             .dark-mode-toggle { padding: 4px 10px; font-size: 0.7rem; }
             .notification { padding: 5px 10px; font-size: 0.65rem; max-width: 220px; }
             .notification-icon { font-size: 0.7rem; }
+            body {
+                padding-top: 70px;
+            }
         }
     </style>
 </head>
@@ -593,7 +622,6 @@
         }
 
         async function cargarExcel() {
-            // SIN NOTIFICACIÓN de carga
             try {
                 const response = await fetch('data/DOC-20251215-WA0003..xlsx');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -610,11 +638,9 @@
                 
                 filteredData = [];
                 poblarSelect();
-                // ✅ NOTIFICACIÓN: activos cargados
                 mostrarNotificacion(`${excelData.length} activos cargados`, 'success');
             } catch(e) {
                 console.error('Error:', e);
-                // ⚠️ NOTIFICACIÓN: error al cargar Excel
                 mostrarNotificacion('Error al cargar Excel', 'error');
             }
         }
@@ -641,10 +667,8 @@
                 poblarSelect();
                 
                 if (filteredData.length === 0) {
-                    // 🔍 NOTIFICACIÓN: no se encontraron resultados
                     mostrarNotificacion('No se encontraron resultados', 'info');
                 } else {
-                    // 🔍 NOTIFICACIÓN: X resultados
                     mostrarNotificacion(`${filteredData.length} resultados`, 'success');
                 }
             }, 300);
@@ -660,13 +684,11 @@
             }
             
             currentItem = excelData[realIndex];
-            // SIN NOTIFICACIÓN de selección
         });
 
         // Generar y mostrar tarjeta
         document.getElementById('generateBtn').addEventListener('click', async function() {
             if (!currentItem) {
-                // ❌ NOTIFICACIÓN: selecciona un activo
                 mostrarNotificacion('Selecciona un activo', 'error');
                 return;
             }
@@ -680,10 +702,8 @@
                 const imagen = await generarImagenTarjeta(currentItem.id, currentItem.codigo, currentItem.desc);
                 cachedImage = imagen;
                 document.getElementById('cardScreen').style.display = 'block';
-                // SIN NOTIFICACIÓN de éxito
             } catch(error) {
                 console.error('Error:', error);
-                // SIN NOTIFICACIÓN de error
                 document.getElementById('selectionScreen').style.display = 'block';
             } finally {
                 document.getElementById('loading').style.display = 'none';
@@ -704,7 +724,6 @@
             link.download = nombreArchivo;
             link.href = img;
             link.click();
-            // SIN NOTIFICACIÓN
         });
 
         // Compartir - SIN NOTIFICACIÓN
@@ -726,7 +745,6 @@
                         text: `Tarjeta para ${currentItem.codigo}`,
                         files: [file]
                     });
-                    // SIN NOTIFICACIÓN
                 } catch(e) {
                     // SIN NOTIFICACIÓN
                 }
@@ -740,7 +758,6 @@
             limpiarCamposSeleccion();
             document.getElementById('cardScreen').style.display = 'none';
             document.getElementById('selectionScreen').style.display = 'block';
-            // SIN NOTIFICACIÓN
         });
 
         // Inicializar
