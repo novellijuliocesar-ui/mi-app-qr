@@ -57,15 +57,20 @@
             --notification-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         
+        html, body {
+            height: 100%;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-body);
             padding: 16px;
-            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: background 0.3s ease;
+            min-height: 100%;
+            height: auto;
         }
         
         .container { 
@@ -103,31 +108,27 @@
             transform: scale(1.02);
         }
         
-        /* Contenedor de notificaciones */
+        /* Contenedor de notificaciones - SOLO UNA VISIBLE */
         .notification-area {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-            max-width: 260px;
+            min-width: 200px;
+            max-width: 280px;
         }
         
-        /* Notificación individual - más pequeña */
+        /* Notificación individual - se reemplaza la anterior */
         .notification {
             background: var(--notification-bg);
             color: var(--notification-text);
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 8px;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 500;
             box-shadow: var(--notification-shadow);
             backdrop-filter: blur(10px);
             animation: slideInLeft 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             border-left: 3px solid;
-            max-width: 260px;
             word-wrap: break-word;
         }
         
@@ -142,7 +143,7 @@
         }
         
         .notification-icon {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
         
         .notification-message {
@@ -319,11 +320,10 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Ajustes para móviles - mantener centrado */
+        /* Ajustes para móviles - mantener centrado perfecto */
         @media (max-width: 640px) {
             body {
                 padding: 16px;
-                align-items: center;
             }
             
             .top-left-container {
@@ -337,13 +337,13 @@
             }
             
             .notification {
-                padding: 5px 10px;
-                font-size: 0.65rem;
-                max-width: 220px;
+                padding: 6px 12px;
+                font-size: 0.7rem;
+                max-width: 240px;
             }
             
             .notification-icon {
-                font-size: 0.7rem;
+                font-size: 0.75rem;
             }
             
             .card-qr canvas {
@@ -421,10 +421,48 @@
         let currentItem = null;
         let cachedImage = null;
         let searchTimeout = null;
+        let notificationTimeout = null;
+        let currentNotification = null;
 
-        // Sistema de notificaciones
+        // Función para forzar el centrado después de cambios
+        function forceCenter() {
+            // Pequeño retraso para permitir que el DOM se actualice
+            setTimeout(() => {
+                const body = document.body;
+                const container = document.querySelector('.container');
+                if (body && container) {
+                    // Forzar reflow para recalcular posiciones
+                    body.style.display = 'flex';
+                    body.style.justifyContent = 'center';
+                    body.style.alignItems = 'center';
+                }
+            }, 10);
+        }
+
+        // Sistema de notificaciones - SOLO UNA A LA VEZ (se reemplaza)
         function mostrarNotificacion(texto, tipo) {
             const notificationArea = document.getElementById('notificationArea');
+            
+            // Si ya hay una notificación, eliminarla con animación
+            if (currentNotification) {
+                currentNotification.classList.add('notification-exit');
+                setTimeout(() => {
+                    if (currentNotification && currentNotification.parentNode) {
+                        currentNotification.remove();
+                    }
+                    crearNuevaNotificacion(texto, tipo, notificationArea);
+                }, 300);
+            } else {
+                crearNuevaNotificacion(texto, tipo, notificationArea);
+            }
+        }
+        
+        function crearNuevaNotificacion(texto, tipo, notificationArea) {
+            // Limpiar timeout anterior
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            
             const notification = document.createElement('div');
             notification.className = `notification notification-${tipo}`;
             
@@ -447,14 +485,19 @@
             `;
             
             notificationArea.appendChild(notification);
+            currentNotification = notification;
             
-            setTimeout(() => {
-                notification.classList.add('notification-exit');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 300);
+            // Auto-eliminar después de 3 segundos
+            notificationTimeout = setTimeout(() => {
+                if (currentNotification) {
+                    currentNotification.classList.add('notification-exit');
+                    setTimeout(() => {
+                        if (currentNotification && currentNotification.parentNode) {
+                            currentNotification.remove();
+                            currentNotification = null;
+                        }
+                    }, 300);
+                }
             }, 3000);
         }
 
@@ -493,13 +536,13 @@
                     searchInput.classList.remove('autoselected');
                 }, 500);
                 
-                mostrarNotificacion(`✅ Auto-seleccionado: ${activoEncontrado.codigo}`, 'success');
+                mostrarNotificacion(`Auto-seleccionado: ${activoEncontrado.codigo}`, 'success');
                 return true;
             }
             return false;
         }
 
-        // Modo oscuro
+        // Modo oscuro con corrección de centrado
         function initDarkMode() {
             const savedMode = localStorage.getItem('darkMode');
             const darkModeToggle = document.getElementById('darkModeToggle');
@@ -507,6 +550,7 @@
             if (savedMode === 'enabled') {
                 document.body.classList.add('dark-mode');
                 darkModeToggle.textContent = '☀️ Modo Claro';
+                forceCenter();
             }
             
             darkModeToggle.addEventListener('click', () => {
@@ -514,6 +558,8 @@
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
                 darkModeToggle.textContent = isDarkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+                // Forzar centrado después del cambio de modo
+                forceCenter();
             });
         }
 
@@ -542,6 +588,7 @@
             
             currentItem = null;
             cachedImage = null;
+            forceCenter();
         }
 
         async function generarImagenTarjeta(id, codigo, descripcion) {
@@ -665,13 +712,13 @@
             document.getElementById('cardNumber').textContent = id;
             document.getElementById('cardCode').textContent = codigo;
             document.getElementById('cardDesc').textContent = descripcion || 'Sin descripción';
+            forceCenter();
         }
 
         function poblarSelect() {
             const select = document.getElementById('activoSelect');
             const dataToShow = filteredData.length > 0 ? filteredData : excelData;
             
-            const currentValue = select.value;
             select.innerHTML = '<option value="">-- Seleccionar --</option>';
             dataToShow.forEach((item, i) => {
                 const opt = document.createElement('option');
@@ -687,6 +734,7 @@
                     select.value = index;
                 }
             }
+            forceCenter();
         }
 
         async function cargarExcel() {
@@ -707,9 +755,11 @@
                 filteredData = [];
                 poblarSelect();
                 mostrarNotificacion(`${excelData.length} activos cargados`, 'success');
+                forceCenter();
             } catch(e) {
                 console.error('Error:', e);
                 mostrarNotificacion('Error al cargar Excel', 'error');
+                forceCenter();
             }
         }
 
@@ -787,9 +837,11 @@
                 const imagen = await generarImagenTarjeta(currentItem.id, currentItem.codigo, currentItem.desc);
                 cachedImage = imagen;
                 document.getElementById('cardScreen').style.display = 'block';
+                forceCenter();
             } catch(error) {
                 console.error('Error:', error);
                 document.getElementById('selectionScreen').style.display = 'block';
+                forceCenter();
             } finally {
                 document.getElementById('loading').style.display = 'none';
             }
@@ -841,11 +893,16 @@
             limpiarCamposSeleccion();
             document.getElementById('cardScreen').style.display = 'none';
             document.getElementById('selectionScreen').style.display = 'block';
+            forceCenter();
         });
 
         // Inicializar
         initDarkMode();
         cargarExcel();
+        
+        // Forzar centrado después de que la página cargue completamente
+        window.addEventListener('load', forceCenter);
+        window.addEventListener('resize', forceCenter);
     </script>
 </body>
 </html>
