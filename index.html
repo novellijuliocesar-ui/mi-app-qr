@@ -32,6 +32,9 @@
             --notification-bg: white;
             --notification-text: #333;
             --notification-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --autocomplete-bg: white;
+            --autocomplete-hover: #f0f0f0;
+            --autocomplete-border: #e0e0e0;
         }
         
         /* Variables para modo oscuro */
@@ -55,6 +58,9 @@
             --notification-bg: #16213e;
             --notification-text: #eee;
             --notification-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --autocomplete-bg: #16213e;
+            --autocomplete-hover: #0f3460;
+            --autocomplete-border: #0f3460;
         }
         
         body {
@@ -215,6 +221,12 @@
         input:focus, select:focus { outline: none; border-color: #F2C200; }
         input::placeholder { color: var(--text-secondary); }
         
+        /* Estilo especial cuando hay autoselección */
+        .autoselected {
+            border-color: #28a745 !important;
+            background-color: rgba(40, 167, 69, 0.1) !important;
+        }
+        
         .btn {
             width: 100%;
             padding: 14px;
@@ -230,7 +242,10 @@
         .btn-secondary { background: var(--btn-secondary-bg); color: var(--btn-secondary-text); }
         .btn-success { background: var(--btn-success-bg); color: var(--btn-success-text); }
         .btn-back { background: var(--btn-back-bg); color: var(--btn-back-text); }
-        .search-section { margin-bottom: 15px; }
+        .search-section { 
+            margin-bottom: 15px;
+            position: relative;
+        }
         
         /* Pantalla de tarjeta */
         .card-screen {
@@ -313,7 +328,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Corrección para móviles: mantener centrado */
+        /* Corrección para móviles */
         @media (max-width: 768px) {
             body {
                 align-items: flex-start;
@@ -401,7 +416,7 @@
         let cachedImage = null;
         let searchTimeout = null;
 
-        // Sistema de notificaciones - SOLO 5 TIPOS
+        // Sistema de notificaciones
         function mostrarNotificacion(texto, tipo) {
             const notificationArea = document.getElementById('notificationArea');
             const notification = document.createElement('div');
@@ -427,7 +442,6 @@
             
             notificationArea.appendChild(notification);
             
-            // Auto-eliminar después de 3 segundos
             setTimeout(() => {
                 notification.classList.add('notification-exit');
                 setTimeout(() => {
@@ -438,7 +452,35 @@
             }, 3000);
         }
 
-        // Modo oscuro (sin notificación)
+        // Función para autoseleccionar un activo por ID
+        function autoseleccionarPorId(idBuscado) {
+            const activoEncontrado = excelData.find(item => item.id === idBuscado);
+            
+            if (activoEncontrado) {
+                currentItem = activoEncontrado;
+                
+                // Sincronizar el select con el activo encontrado
+                const select = document.getElementById('activoSelect');
+                const index = excelData.findIndex(item => item.id === idBuscado);
+                if (index !== -1) {
+                    select.value = index;
+                }
+                
+                // Resaltar visualmente el campo de búsqueda
+                const searchInput = document.getElementById('searchInput');
+                searchInput.classList.add('autoselected');
+                setTimeout(() => {
+                    searchInput.classList.remove('autoselected');
+                }, 500);
+                
+                // Mostrar notificación de autoselección
+                mostrarNotificacion(`✅ Auto-seleccionado: ${activoEncontrado.codigo}`, 'success');
+                return true;
+            }
+            return false;
+        }
+
+        // Modo oscuro
         function initDarkMode() {
             const savedMode = localStorage.getItem('darkMode');
             const darkModeToggle = document.getElementById('darkModeToggle');
@@ -453,7 +495,6 @@
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
                 darkModeToggle.textContent = isDarkMode ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
-                // SIN NOTIFICACIÓN
             });
         }
 
@@ -645,12 +686,30 @@
             }
         }
 
-        // Búsqueda
+        // Búsqueda CON AUTOSELECCIÓN
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                const term = this.value.toLowerCase().trim();
+            const term = this.value.toLowerCase().trim();
+            
+            // PRIMERO: Verificar si el término es un ID exacto que existe
+            if (term && excelData.length > 0) {
+                const matchExacto = excelData.find(item => 
+                    item.id === term || 
+                    item.codigo.toLowerCase() === term
+                );
                 
+                if (matchExacto) {
+                    // Autoseleccionar automáticamente
+                    autoseleccionarPorId(matchExacto.id);
+                    // Limpiar filtros y resetear select
+                    filteredData = [];
+                    poblarSelect();
+                    return;
+                }
+            }
+            
+            // Si no es match exacto, hacer búsqueda normal
+            searchTimeout = setTimeout(() => {
                 if (!term) {
                     filteredData = [];
                     poblarSelect();
@@ -674,7 +733,7 @@
             }, 300);
         });
 
-        // Selección - SIN NOTIFICACIÓN
+        // Selección manual desde el select
         document.getElementById('activoSelect').addEventListener('change', function() {
             const realIndex = parseInt(this.value);
             
@@ -684,6 +743,7 @@
             }
             
             currentItem = excelData[realIndex];
+            // No mostrar notificación para selección manual
         });
 
         // Generar y mostrar tarjeta
@@ -710,7 +770,7 @@
             }
         });
 
-        // Descargar - SIN NOTIFICACIÓN
+        // Descargar
         document.getElementById('downloadCardBtn').addEventListener('click', async function() {
             if (!currentItem) return;
             
@@ -726,7 +786,7 @@
             link.click();
         });
 
-        // Compartir - SIN NOTIFICACIÓN
+        // Compartir
         document.getElementById('shareCardBtn').addEventListener('click', async function() {
             if (!currentItem) return;
             
@@ -745,15 +805,13 @@
                         text: `Tarjeta para ${currentItem.codigo}`,
                         files: [file]
                     });
-                } catch(e) {
-                    // SIN NOTIFICACIÓN
-                }
+                } catch(e) {}
             } else {
                 document.getElementById('downloadCardBtn').click();
             }
         });
 
-        // Botón volver - SIN NOTIFICACIÓN
+        // Botón volver
         document.getElementById('backBtn').addEventListener('click', function() {
             limpiarCamposSeleccion();
             document.getElementById('cardScreen').style.display = 'none';
