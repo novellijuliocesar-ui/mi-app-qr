@@ -415,6 +415,7 @@
         let currentItem = null;
         let cachedImage = null;
         let searchTimeout = null;
+        let isUpdatingFromSelect = false; // Evitar bucles infinitos
 
         // Sistema de notificaciones
         function mostrarNotificacion(texto, tipo) {
@@ -452,8 +453,21 @@
             }, 3000);
         }
 
+        // Función para actualizar el campo de búsqueda con el ID del activo seleccionado
+        function actualizarCampoBusquedaConId(id) {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value !== id) {
+                searchInput.value = id;
+                // Resaltar visualmente
+                searchInput.classList.add('autoselected');
+                setTimeout(() => {
+                    searchInput.classList.remove('autoselected');
+                }, 500);
+            }
+        }
+
         // Función para autoseleccionar un activo por ID
-        function autoseleccionarPorId(idBuscado) {
+        function autoseleccionarPorId(idBuscado, esAutomatico = true) {
             const activoEncontrado = excelData.find(item => item.id === idBuscado);
             
             if (activoEncontrado) {
@@ -462,8 +476,13 @@
                 // Sincronizar el select con el activo encontrado
                 const select = document.getElementById('activoSelect');
                 const index = excelData.findIndex(item => item.id === idBuscado);
-                if (index !== -1) {
+                if (index !== -1 && select.value != index) {
                     select.value = index;
+                }
+                
+                // Si es automático (viene del buscador), actualizar el campo de búsqueda con el ID
+                if (esAutomatico) {
+                    actualizarCampoBusquedaConId(idBuscado);
                 }
                 
                 // Resaltar visualmente el campo de búsqueda
@@ -478,6 +497,29 @@
                 return true;
             }
             return false;
+        }
+
+        // Función para seleccionar manualmente desde el dropdown
+        function seleccionarDesdeDropdown(index) {
+            if (index === "" || index === null || index === undefined) {
+                currentItem = null;
+                return;
+            }
+            
+            const idx = parseInt(index);
+            if (isNaN(idx) || idx < 0 || !excelData[idx]) {
+                currentItem = null;
+                return;
+            }
+            
+            currentItem = excelData[idx];
+            
+            // Actualizar el campo de búsqueda con el ID del activo seleccionado
+            actualizarCampoBusquedaConId(currentItem.id);
+            
+            // Limpiar filtros de búsqueda
+            filteredData = [];
+            poblarSelect();
         }
 
         // Modo oscuro
@@ -652,6 +694,7 @@
             const select = document.getElementById('activoSelect');
             const dataToShow = filteredData.length > 0 ? filteredData : excelData;
             
+            const currentValue = select.value;
             select.innerHTML = '<option value="">-- Seleccionar --</option>';
             dataToShow.forEach((item, i) => {
                 const opt = document.createElement('option');
@@ -660,6 +703,14 @@
                 opt.textContent = `${item.codigo} - ${item.desc.substring(0, 50)}`;
                 select.appendChild(opt);
             });
+            
+            // Restaurar selección si es posible
+            if (currentItem) {
+                const index = excelData.findIndex(item => item.id === currentItem.id);
+                if (index !== -1 && select.value != index) {
+                    select.value = index;
+                }
+            }
         }
 
         async function cargarExcel() {
@@ -686,7 +737,7 @@
             }
         }
 
-        // Búsqueda CON AUTOSELECCIÓN
+        // Búsqueda CON AUTOSELECCIÓN Y SINCRONIZACIÓN
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const term = this.value.toLowerCase().trim();
@@ -699,8 +750,8 @@
                 );
                 
                 if (matchExacto) {
-                    // Autoseleccionar automáticamente
-                    autoseleccionarPorId(matchExacto.id);
+                    // Autoseleccionar automáticamente (es automático = true)
+                    autoseleccionarPorId(matchExacto.id, true);
                     // Limpiar filtros y resetear select
                     filteredData = [];
                     poblarSelect();
@@ -733,7 +784,7 @@
             }, 300);
         });
 
-        // Selección manual desde el select
+        // Selección manual desde el select - ACTUALIZA EL CAMPO DE BÚSQUEDA
         document.getElementById('activoSelect').addEventListener('change', function() {
             const realIndex = parseInt(this.value);
             
@@ -743,7 +794,13 @@
             }
             
             currentItem = excelData[realIndex];
-            // No mostrar notificación para selección manual
+            
+            // Actualizar el campo de búsqueda con el ID del activo seleccionado
+            actualizarCampoBusquedaConId(currentItem.id);
+            
+            // Limpiar filtros de búsqueda
+            filteredData = [];
+            poblarSelect();
         });
 
         // Generar y mostrar tarjeta
@@ -811,7 +868,7 @@
             }
         });
 
-        // Botón volver
+        // Botón volver - Limpia ambos campos
         document.getElementById('backBtn').addEventListener('click', function() {
             limpiarCamposSeleccion();
             document.getElementById('cardScreen').style.display = 'none';
