@@ -3,8 +3,30 @@
     background: #f5f5f5;
     padding: 16px;
     padding-bottom: 80px;
+    /* Centrado vertical como el QR */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
+.stock-page > * {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ===== TARJETA PRINCIPAL (mismo estilo que selection-screen) ===== */
+.stock-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+}
+
+/* ===== HEADER (mismo estilo que el QR) ===== */
 .stock-header {
     background: #F2C200;
     border-radius: 20px;
@@ -27,8 +49,8 @@
     margin: 5px 0 0;
 }
 
-/* ===== BÚSQUEDA Y FILTROS ===== */
-.search-section {
+/* ===== BÚSQUEDA Y FILTROS (mismo estilo que el QR) ===== */
+.stock-search-section {
     background: white;
     border-radius: 16px;
     padding: 16px;
@@ -36,7 +58,7 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
 }
 
-.search-section label {
+.stock-search-section label {
     display: block;
     font-size: 0.85rem;
     font-weight: 600;
@@ -44,7 +66,7 @@
     margin-bottom: 8px;
 }
 
-.search-section input {
+.stock-search-section input {
     width: 100%;
     padding: 12px;
     border: 2px solid #e0e0e0;
@@ -55,27 +77,27 @@
     background: white;
 }
 
-.search-section input:focus {
+.stock-search-section input:focus {
     outline: none;
     border-color: #F2C200;
     box-shadow: 0 0 0 3px rgba(242, 194, 0, 0.2);
 }
 
-.filters-section {
+.stock-filters-section {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 12px;
 }
 
-.filter-group {
+.stock-filter-group {
     background: white;
     border-radius: 16px;
     padding: 12px 16px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
 }
 
-.filter-group label {
+.stock-filter-group label {
     display: block;
     font-size: 0.75rem;
     font-weight: 600;
@@ -83,7 +105,7 @@
     margin-bottom: 4px;
 }
 
-.filter-group select {
+.stock-filter-group select {
     width: 100%;
     padding: 10px;
     border: 2px solid #e0e0e0;
@@ -94,14 +116,14 @@
     transition: border-color 0.3s ease;
 }
 
-.filter-group select:focus {
+.stock-filter-group select:focus {
     outline: none;
     border-color: #F2C200;
     box-shadow: 0 0 0 3px rgba(242, 194, 0, 0.2);
 }
 
-/* ===== BOTONES ===== */
-.btn {
+/* ===== BOTÓN DE BÚSQUEDA (mismo estilo que el QR) ===== */
+.stock-btn {
     width: 100%;
     padding: 14px;
     border: none;
@@ -111,6 +133,29 @@
     cursor: pointer;
     transition: all 0.3s ease;
     margin-bottom: 12px;
+}
+
+.stock-btn:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+.stock-btn-primary {
+    background: #F2C200;
+    color: #1a1a2e;
+}
+
+/* ========== BOTONES COMUNES (reutilizados) ========== */
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
 }
 
 .btn:hover {
@@ -146,15 +191,7 @@
     border-radius: 8px;
 }
 
-/* ====== PANTALLA DE RESULTADOS ====== */
-
-.results-screen {
-    background: #f5f5f5;
-    padding: 16px;
-    padding-bottom: 80px;
-}
-
-/* ====== TABLA DE RESULTADOS ====== */
+/* ========== TABLA DE RESULTADOS ========== */
 
 .stock-table-container {
     background: white;
@@ -204,7 +241,31 @@
     border-bottom: none;
 }
 
-/* ===== MENSAJES ===== */
+/* ===== BADGES ===== */
+.stock-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.stock-badge.high {
+    background: #d4edda;
+    color: #155724;
+}
+
+.stock-badge.medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.stock-badge.low {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ========== MENSAJES ========== */
 .message {
     padding: 12px;
     border-radius: 12px;
@@ -230,22 +291,34 @@
     border-left: 4px solid #17a2b8;
 }
 
-/* ====== SPINER ====== */
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #F2C200;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
+/* ========== PAGINACIÓN ========== */
+#paginationControlsTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+/* ========== BOTONES DE ACCIÓN EN LA PARTE SUPERIOR ========== */
+.action-buttons-top {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-/* ====== SCROLLBAR PERSONALIZADA ====== */
+.action-buttons-top .btn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    margin: 0;
+    flex: 1;
+    min-width: 80px;
+}
+
+/* ========== SCROLLBAR PERSONALIZADA ========== */
 #resultsTableWrapper::-webkit-scrollbar {
     height: 6px;
 }
@@ -264,34 +337,7 @@
     background: #a8a8a8;
 }
 
-/* ====== BOTONES DE ACCIÓN ====== */
-
-.action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.action-buttons .btn {
-    margin: 0;
-    padding: 14px;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-/* ====== PAGINACIÓN ====== */
-#paginationControls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0 0;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-/* ====== RESPONSIVE ====== */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
     .stock-table {
         font-size: 0.75rem;
@@ -321,7 +367,7 @@
         padding: 6px 6px;
     }
     
-    .filter-group {
+    .stock-filter-group {
         padding: 8px 12px;
     }
 
@@ -335,27 +381,41 @@
         font-size: 1rem !important;
     }
     
-    #paginationControls {
+    #paginationControlsTop {
         flex-direction: column;
         align-items: center;
         gap: 8px;
     }
 
-    .action-buttons .btn {
-        font-size: 0.9rem;
-        padding: 12px;
+    .action-buttons-top .btn {
+        font-size: 0.65rem;
+        padding: 4px 8px;
+        min-width: 60px;
     }
 }
 
-/* ====== BOTONES EN FILA (pantallas grandes) ====== */
+@media (max-height: 700px) {
+    .stock-page {
+        justify-content: flex-start;
+        padding-top: 20px;
+    }
+}
+
+@media (min-height: 800px) {
+    .stock-page {
+        justify-content: center;
+    }
+}
+
+/* ===== BOTONES EN FILA (pantallas grandes) ====== */
 @media (min-width: 500px) {
-    .action-buttons {
+    .action-buttons-top {
         flex-direction: row;
         flex-wrap: wrap;
     }
     
-    .action-buttons .btn {
+    .action-buttons-top .btn {
         flex: 1;
-        min-width: 120px;
+        min-width: 100px;
     }
 }

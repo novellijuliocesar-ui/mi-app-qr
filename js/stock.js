@@ -439,15 +439,13 @@ class StockApp {
     _buildUI() {
         this.container.innerHTML = `
             <!-- ====== PANTALLA DE BÚSQUEDA ====== -->
-            <div id="searchScreen" class="search-screen">
+            <div id="searchScreen" class="stock-card">
                 <div class="stock-header">
                     <h1>🔧 Búsqueda de Repuestos</h1>
                     <p>Consulta el stock del almacén</p>
                 </div>
 
-                <div id="stockMessage" class="message" role="alert" aria-live="polite"></div>
-
-                <div class="search-section">
+                <div class="stock-search-section">
                     <label for="stockSearchInput">🔍 Buscar</label>
                     <input 
                         type="text" 
@@ -457,8 +455,8 @@ class StockApp {
                     >
                 </div>
 
-                <div class="filters-section">
-                    <div class="filter-group">
+                <div class="stock-filters-section">
+                    <div class="stock-filter-group">
                         <label for="categoryFilter">🏷️ Clasificación</label>
                         <select id="categoryFilter">
                             <option value="">-- Todas --</option>
@@ -466,14 +464,14 @@ class StockApp {
                     </div>
                 </div>
 
-                <button class="btn btn-primary" id="searchBtn">
+                <button class="stock-btn stock-btn-primary" id="searchBtn">
                     🔍 Buscar Repuestos
                 </button>
             </div>
 
             <!-- ====== PANTALLA DE RESULTADOS ====== -->
-            <div id="resultsScreen" class="results-screen" style="display: none;">
-                <div class="stock-header" style="text-align: center; padding: 15px 15px 10px 15px;">
+            <div id="resultsScreen" class="stock-card" style="display: none;">
+                <div class="stock-header" style="text-align: center; padding: 15px;">
                     <h1 style="margin: 0; font-size: 1.2rem;">📊 Resultados de Búsqueda</h1>
                     <p id="resultsSubtitle" style="margin: 4px 0 10px 0; font-size: 0.8rem;">0 resultados encontrados</p>
                     
