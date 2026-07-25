@@ -434,89 +434,98 @@ class StockApp {
         await this._cargarDatos();
         this._poblarFiltros();
         this._setupEventListeners();
+        
+        // Añadir clase 'centered' al wrapper inicialmente (modo búsqueda)
+        const wrapper = this.container.querySelector('.stock-wrapper');
+        if (wrapper) {
+            wrapper.classList.add('centered');
+        }
     }
 
     _buildUI() {
+        // Envolvemos todo en un wrapper
         this.container.innerHTML = `
-            <!-- ====== PANTALLA DE BÚSQUEDA ====== -->
-            <div id="searchScreen" class="stock-card">
-                <div class="stock-header">
-                    <h1>🔧 Búsqueda de Repuestos</h1>
-                    <p>Consulta el stock del almacén</p>
-                </div>
-
-                <div class="stock-search-section">
-                    <label for="stockSearchInput">🔍 Buscar</label>
-                    <input 
-                        type="text" 
-                        id="stockSearchInput" 
-                        placeholder="Buscar por referencia, descripción o ubicación..." 
-                        autocomplete="off"
-                    >
-                </div>
-
-                <div class="stock-filters-section">
-                    <div class="stock-filter-group">
-                        <label for="categoryFilter">🏷️ Clasificación</label>
-                        <select id="categoryFilter">
-                            <option value="">-- Todas --</option>
-                        </select>
+            <div class="stock-wrapper centered">
+                <!-- ====== PANTALLA DE BÚSQUEDA ====== -->
+                <div id="searchScreen" class="stock-card">
+                    <div class="stock-header">
+                        <h1>🔧 Búsqueda de Repuestos</h1>
+                        <p>Consulta el stock del almacén</p>
                     </div>
-                </div>
 
-                <button class="stock-btn stock-btn-primary" id="searchBtn">
-                    🔍 Buscar Repuestos
-                </button>
-            </div>
+                    <div class="stock-search-section">
+                        <label for="stockSearchInput">🔍 Buscar</label>
+                        <input 
+                            type="text" 
+                            id="stockSearchInput" 
+                            placeholder="Buscar por referencia, descripción o ubicación..." 
+                            autocomplete="off"
+                        >
+                    </div>
 
-            <!-- ====== PANTALLA DE RESULTADOS ====== -->
-            <div id="resultsScreen" class="stock-card" style="display: none;">
-                <div class="stock-header" style="text-align: center; padding: 15px;">
-                    <h1 style="margin: 0; font-size: 1.2rem;">📊 Resultados de Búsqueda</h1>
-                    <p id="resultsSubtitle" style="margin: 4px 0 10px 0; font-size: 0.8rem;">0 resultados encontrados</p>
-                    
-                    <!-- ====== CONTROLES DE PAGINACIÓN (ARRIBA) ====== -->
-                    <div id="paginationControlsTop" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);">
-                        <span id="paginationInfoTop" style="font-size: 0.75rem; color: #1a1a2e; font-weight: 600;">Mostrando 0 de 0</span>
-                        <div style="display: flex; gap: 6px;">
-                            <button class="btn btn-small btn-back" id="prevPageBtnTop" style="padding: 4px 12px; font-size: 0.7rem; margin: 0; background: rgba(26,26,46,0.8); color: white;">◀</button>
-                            <span id="pageIndicatorTop" style="font-size: 0.75rem; color: #1a1a2e; font-weight: 600; display: flex; align-items: center; padding: 0 8px;">Página 1</span>
-                            <button class="btn btn-small btn-back" id="nextPageBtnTop" style="padding: 4px 12px; font-size: 0.7rem; margin: 0; background: rgba(26,26,46,0.8); color: white;">▶</button>
+                    <div class="stock-filters-section">
+                        <div class="stock-filter-group">
+                            <label for="categoryFilter">🏷️ Clasificación</label>
+                            <select id="categoryFilter">
+                                <option value="">-- Todas --</option>
+                            </select>
                         </div>
                     </div>
-                    
-                    <!-- ====== BOTONES DE ACCIÓN (ARRIBA) ====== -->
-                    <div class="action-buttons-top" id="actionButtonsTop" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: center;">
-                        <button class="btn btn-small btn-secondary" id="downloadImageBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
-                            📥 Descargar
-                        </button>
-                        <button class="btn btn-small btn-success" id="shareImageBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
-                            📤 Compartir
-                        </button>
-                        <button class="btn btn-small btn-back" id="newSearchBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
-                            ◀ Nueva
-                        </button>
-                    </div>
+
+                    <button class="stock-btn stock-btn-primary" id="searchBtn">
+                        🔍 Buscar Repuestos
+                    </button>
                 </div>
 
-                <div class="stock-table-container" id="tableContainer">
-                    <div id="resultsTableWrapper" style="overflow-x: auto;">
-                        <table class="stock-table" id="resultsTable">
-                            <thead>
-                                <tr>
-                                    <th data-sort="ubicacion" style="cursor: pointer;">📍 Ubicación</th>
-                                    <th data-sort="referencia" style="cursor: pointer;">Referencia</th>
-                                    <th data-sort="descripcion" style="cursor: pointer;">Descripción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resultsTableBody">
-                                <tr>
-                                    <td colspan="3" style="text-align: center; padding: 40px; color: #999;">
-                                        No hay resultados para mostrar
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- ====== PANTALLA DE RESULTADOS ====== -->
+                <div id="resultsScreen" class="stock-card" style="display: none;">
+                    <div class="stock-header" style="text-align: center; padding: 15px;">
+                        <h1 style="margin: 0; font-size: 1.2rem;">📊 Resultados de Búsqueda</h1>
+                        <p id="resultsSubtitle" style="margin: 4px 0 10px 0; font-size: 0.8rem;">0 resultados encontrados</p>
+                        
+                        <!-- ====== CONTROLES DE PAGINACIÓN (ARRIBA) ====== -->
+                        <div id="paginationControlsTop" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);">
+                            <span id="paginationInfoTop" style="font-size: 0.75rem; color: #1a1a2e; font-weight: 600;">Mostrando 0 de 0</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn btn-small btn-back" id="prevPageBtnTop" style="padding: 4px 12px; font-size: 0.7rem; margin: 0; background: rgba(26,26,46,0.8); color: white;">◀</button>
+                                <span id="pageIndicatorTop" style="font-size: 0.75rem; color: #1a1a2e; font-weight: 600; display: flex; align-items: center; padding: 0 8px;">Página 1</span>
+                                <button class="btn btn-small btn-back" id="nextPageBtnTop" style="padding: 4px 12px; font-size: 0.7rem; margin: 0; background: rgba(26,26,46,0.8); color: white;">▶</button>
+                            </div>
+                        </div>
+                        
+                        <!-- ====== BOTONES DE ACCIÓN (ARRIBA) ====== -->
+                        <div class="action-buttons-top" id="actionButtonsTop" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: center;">
+                            <button class="btn btn-small btn-secondary" id="downloadImageBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
+                                📥 Descargar
+                            </button>
+                            <button class="btn btn-small btn-success" id="shareImageBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
+                                📤 Compartir
+                            </button>
+                            <button class="btn btn-small btn-back" id="newSearchBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
+                                ◀ Nueva
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stock-table-container" id="tableContainer">
+                        <div id="resultsTableWrapper" style="overflow-x: auto;">
+                            <table class="stock-table" id="resultsTable">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="ubicacion" style="cursor: pointer;">📍 Ubicación</th>
+                                        <th data-sort="referencia" style="cursor: pointer;">Referencia</th>
+                                        <th data-sort="descripcion" style="cursor: pointer;">Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsTableBody">
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; padding: 40px; color: #999;">
+                                            No hay resultados para mostrar
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -618,6 +627,13 @@ class StockApp {
 
         if (this.filtrados.length === 0) {
             mostrarMensaje(`🔍 No se encontraron resultados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`, 'info', 3000);
+            
+            // Mantener clase 'centered' si no hay resultados
+            const wrapper = this.container.querySelector('.stock-wrapper');
+            if (wrapper) {
+                wrapper.classList.add('centered');
+            }
+            
             this.elements.resultsScreen.style.display = 'block';
             this.elements.searchScreen.style.display = 'none';
             this.elements.resultsSubtitle.textContent = `🔍 0 resultados encontrados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`;
@@ -637,6 +653,12 @@ class StockApp {
     }
 
     async _mostrarResultados() {
+        // QUITAR la clase 'centered' del wrapper cuando hay resultados
+        const wrapper = this.container.querySelector('.stock-wrapper');
+        if (wrapper) {
+            wrapper.classList.remove('centered');
+        }
+
         this.elements.searchScreen.style.display = 'none';
         this.elements.resultsScreen.style.display = 'block';
 
@@ -848,6 +870,12 @@ class StockApp {
     }
 
     _volver() {
+        // AÑADIR la clase 'centered' al wrapper cuando se vuelve al buscador
+        const wrapper = this.container.querySelector('.stock-wrapper');
+        if (wrapper) {
+            wrapper.classList.add('centered');
+        }
+
         if (this.elements.searchInput) {
             this.elements.searchInput.value = '';
         }
