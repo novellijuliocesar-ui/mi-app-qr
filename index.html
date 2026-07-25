@@ -2,85 +2,48 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="theme-color" content="#F2C200">
-    <meta name="description" content="Generador de Tarjetas QR para activos">
-    <title>Generador de Tarjetas QR</title>
+    <meta name="description" content="Generador de Tarjetas QR y Búsqueda de Stock">
+    <title>QR Generator & Stock</title>
     
     <!-- MANIFEST -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     
-    <!-- ===== CSS CON RUTA ABSOLUTA DESDE LA RAÍZ DEL PROYECTO ===== -->
-    <link rel="stylesheet" href="/mi-app-qr/css/styles.css">
+    <!-- ===== CSS (rutas relativas para compatibilidad) ===== -->
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/stock.css">
     
     <!-- Bibliotecas externas -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
-    <div class="container" id="app">
-        <!-- Pantalla de selección -->
-        <section id="selectionScreen" class="selection-screen">
-            <header class="header">
-                <h1>📱 Generador de Tarjetas QR</h1>
-                <p>Selecciona o busca un activo del archivo Excel</p>
-            </header>
+    <div class="app-container">
+        <!-- ====== INDICADOR DE PÁGINA ====== -->
+        <div class="page-indicator">
+            <span class="dot active" data-page="0"></span>
+            <span class="dot" data-page="1"></span>
+        </div>
 
-            <div id="message" class="message" role="alert" aria-live="polite"></div>
+        <!-- ====== CONTENEDOR DE PÁGINAS (SWIPE) ====== -->
+        <div class="pages-wrapper" id="pagesWrapper">
+            <!-- Página 1: Generador QR -->
+            <div id="qrPage" class="page qr-page"></div>
 
-            <div class="search-section">
-                <label for="searchInput">🔍 Buscar (por ID o Código)</label>
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Ej: 162514 o TALLER..." 
-                    autocomplete="off"
-                    aria-label="Buscar activo"
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="activoSelect">📋 Seleccionar activo</label>
-                <select id="activoSelect" aria-label="Lista de activos">
-                    <option value="">-- Cargando... --</option>
-                </select>
-            </div>
-
-            <button class="btn btn-primary" id="generateBtn">
-                ✨ Generar Tarjeta
-            </button>
-        </section>
-
-        <!-- Pantalla de tarjeta generada -->
-        <section id="cardScreen" class="card-screen" hidden>
-            <div class="card-container">
-                <div id="cardNumber" class="card-number"></div>
-                <div id="cardQr" class="card-qr"></div>
-                <div id="cardCode" class="card-code"></div>
-                <div id="cardDesc" class="card-desc"></div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-secondary" id="downloadCardBtn">
-                    📥 Descargar
-                </button>
-                <button class="btn btn-success" id="shareCardBtn">
-                    📤 Compartir
-                </button>
-                <button class="btn btn-back" id="backBtn">
-                    ◀ Nueva Tarjeta
-                </button>
-            </div>
-        </section>
-
-        <!-- Loading -->
-        <div id="loading" class="loading" hidden>
-            <div class="spinner"></div>
-            <p>Generando tarjeta...</p>
+            <!-- Página 2: Búsqueda de Stock -->
+            <div id="stockPage" class="page stock-page"></div>
         </div>
     </div>
 
-    <!-- JavaScript modular -->
-    <script type="module" src="js/app.js"></script>
+    <!-- ====== SCRIPTS ====== -->
+    <!-- Sistema de navegación -->
+    <script type="module" src="./js/navigation.js"></script>
+    
+    <!-- App QR Generator -->
+    <script type="module" src="./js/app.js"></script>
+    
+    <!-- App Stock Search -->
+    <script type="module" src="./js/stock.js"></script>
 </body>
 </html>

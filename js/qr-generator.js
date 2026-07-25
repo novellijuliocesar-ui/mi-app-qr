@@ -1,9 +1,6 @@
 // ========== GENERADOR DE QR ==========
 
 export class QRGenerator {
-    /**
-     * Genera un canvas con el código QR
-     */
     static async generarQR(texto, width = 200, margin = 1) {
         return new Promise((resolve, reject) => {
             try {

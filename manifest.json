@@ -1,7 +1,7 @@
 {
-  "name": "Generador de Tarjetas QR",
-  "short_name": "QR Cards",
-  "description": "Genera tarjetas QR con formato personalizado",
+  "name": "QR Generator & Stock",
+  "short_name": "QR & Stock",
+  "description": "Genera tarjetas QR y consulta stock de activos",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

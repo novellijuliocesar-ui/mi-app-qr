@@ -5,20 +5,76 @@
     box-sizing: border-box;
 }
 
-body {
+html, body {
+    height: 100%;
+    overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f5f5f5;
-    padding: 16px;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
-.container {
-    max-width: 600px;
-    margin: 0 auto;
+.app-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+/* ========== INDICADOR DE PÁGINA ========== */
+.page-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px 16px;
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: #F2C200;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(242, 194, 0, 0.5);
+}
+
+/* ========== CONTENEDOR DE PÁGINAS ========== */
+.pages-wrapper {
+    display: flex;
     width: 100%;
+    height: 100vh;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+    touch-action: pan-y;
+    cursor: grab;
+}
+
+.pages-wrapper:active {
+    cursor: grabbing;
+}
+
+.page {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    padding-bottom: 80px;
 }
 
 /* ========== COMPONENTES COMUNES ========== */

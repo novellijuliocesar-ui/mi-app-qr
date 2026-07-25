@@ -1,16 +1,10 @@
 // ========== UTILIDADES ==========
 
-/**
- * Limpia un ID eliminando decimales
- */
 export function limpiarId(idRaw) {
     const idStr = String(idRaw);
     return idStr.includes('.') ? idStr.split('.')[0] : idStr;
 }
 
-/**
- * Muestra un mensaje temporal en la interfaz
- */
 export function mostrarMensaje(texto, tipo = 'info', duration = 3000) {
     const msg = document.getElementById('message');
     if (!msg) return;
@@ -26,16 +20,10 @@ export function mostrarMensaje(texto, tipo = 'info', duration = 3000) {
     }
 }
 
-/**
- * Escapa caracteres especiales para nombres de archivo
- */
 export function sanitizarNombre(nombre) {
     return nombre.replace(/[<>:"/\\|?*.]/g, '_');
 }
 
-/**
- * Debounce para búsquedas
- */
 export function debounce(func, wait) {
     let timeout;
     return function(...args) {
