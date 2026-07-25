@@ -1,7 +1,7 @@
 // ========== SERVICE WORKER ==========
 // Versión: v4 - Soporte para QR Generator + Stock Search
 
-const CACHE_NAME = 'qr-stock-app-v4';
+const CACHE_NAME = 'mi-app-qr-app-v4';
 const BASE_PATH = '/mi-app-qr/';
 
 // ===== ASSETS PARA CACHEAR =====
