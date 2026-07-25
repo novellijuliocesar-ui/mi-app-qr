@@ -427,24 +427,15 @@ class StockApp {
         this.elements = {};
         this.messageEl = null;
 
-        // Bind de métodos para asegurar el contexto
-        this._buscar = this._buscar.bind(this);
-        this._volver = this._volver.bind(this);
-        this._cambiarPagina = this._cambiarPagina.bind(this);
-        this._ordenarPor = this._ordenarPor.bind(this);
-        this._descargarImagen = this._descargarImagen.bind(this);
-        this._compartirImagen = this._compartirImagen.bind(this);
-        this._renderPagina = this._renderPagina.bind(this);
-        this._mostrarResultados = this._mostrarResultados.bind(this);
-
         this.init();
     }
 
     async init() {
         this._buildUI();
-        this._setupEventListeners();
+        // Primero cargar datos y luego configurar eventos
         await this._cargarDatos();
         this._poblarFiltros();
+        this._setupEventListeners();
     }
 
     _buildUI() {
@@ -535,6 +526,7 @@ class StockApp {
             </div>
         `;
 
+        // Capturar elementos después de construir el HTML
         this.elements = {
             searchScreen: this.container.querySelector('#searchScreen'),
             resultsScreen: this.container.querySelector('#resultsScreen'),
@@ -551,47 +543,72 @@ class StockApp {
             actionButtons: this.container.querySelector('#actionButtons'),
         };
         this.messageEl = this.container.querySelector('#stockMessage');
+
+        // Guardar referencias de los botones de acción por ID para acceder después
+        this._downloadBtn = document.getElementById('downloadImageBtn');
+        this._shareBtn = document.getElementById('shareImageBtn');
+        this._newSearchBtn = document.getElementById('newSearchBtn');
     }
 
     _setupEventListeners() {
+        console.log('[StockApp] Configurando event listeners...');
+
         // Búsqueda
         if (this.elements.searchBtn) {
-            this.elements.searchBtn.addEventListener('click', this._buscar);
+            this.elements.searchBtn.addEventListener('click', () => {
+                console.log('[StockApp] Click en buscar');
+                this._buscar();
+            });
         }
         if (this.elements.searchInput) {
             this.elements.searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
+                    console.log('[StockApp] Enter en buscar');
                     this._buscar();
                 }
             });
         }
 
-        // Paginación - Usando arrow functions para mantener el contexto
+        // Paginación
         if (this.elements.prevPageBtn) {
             this.elements.prevPageBtn.addEventListener('click', () => {
+                console.log('[StockApp] Click en anterior');
                 this._cambiarPagina(-1);
             });
         }
         if (this.elements.nextPageBtn) {
             this.elements.nextPageBtn.addEventListener('click', () => {
+                console.log('[StockApp] Click en siguiente');
                 this._cambiarPagina(1);
             });
         }
 
-        // Botones de acción - Usando arrow functions
-        const downloadBtn = document.getElementById('downloadImageBtn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', this._descargarImagen);
+        // Botones de acción
+        if (this._downloadBtn) {
+            this._downloadBtn.addEventListener('click', () => {
+                console.log('[StockApp] Click en descargar imagen');
+                this._descargarImagen();
+            });
+        } else {
+            console.warn('[StockApp] No se encontró downloadImageBtn');
         }
 
-        const shareBtn = document.getElementById('shareImageBtn');
-        if (shareBtn) {
-            shareBtn.addEventListener('click', this._compartirImagen);
+        if (this._shareBtn) {
+            this._shareBtn.addEventListener('click', () => {
+                console.log('[StockApp] Click en compartir imagen');
+                this._compartirImagen();
+            });
+        } else {
+            console.warn('[StockApp] No se encontró shareImageBtn');
         }
 
-        const newSearchBtn = document.getElementById('newSearchBtn');
-        if (newSearchBtn) {
-            newSearchBtn.addEventListener('click', this._volver);
+        if (this._newSearchBtn) {
+            this._newSearchBtn.addEventListener('click', () => {
+                console.log('[StockApp] Click en nueva búsqueda');
+                this._volver();
+            });
+        } else {
+            console.warn('[StockApp] No se encontró newSearchBtn');
         }
 
         // Ordenación
@@ -599,10 +616,20 @@ class StockApp {
             this.elements.resultsTable.querySelectorAll('th[data-sort]').forEach(th => {
                 th.addEventListener('click', () => {
                     const key = th.dataset.sort;
+                    console.log('[StockApp] Ordenar por:', key);
                     this._ordenarPor(key);
                 });
             });
         }
+
+        console.log('[StockApp] Event listeners configurados');
+        console.log('[StockApp] Botones:', {
+            download: !!this._downloadBtn,
+            share: !!this._shareBtn,
+            newSearch: !!this._newSearchBtn,
+            prev: !!this.elements.prevPageBtn,
+            next: !!this.elements.nextPageBtn
+        });
     }
 
     async _cargarDatos() {
@@ -630,6 +657,8 @@ class StockApp {
         const termino = this.elements.searchInput.value.trim();
         const categoria = this.elements.categoryFilter.value;
 
+        console.log('[StockApp] Buscando:', { termino, categoria });
+
         if (!termino && !categoria) {
             this._showMessage('⚠️ Introduce un término de búsqueda o selecciona una categoría', 'info', 3000);
             return;
@@ -641,6 +670,8 @@ class StockApp {
         this.filtrados = this.loader.buscar(termino, categoria);
         this.paginaActual = 1;
         this.cachedImage = null;
+
+        console.log('[StockApp] Resultados:', this.filtrados.length);
 
         if (this.filtrados.length === 0) {
             this._showMessage(`🔍 No se encontraron resultados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`, 'info', 3000);
@@ -689,6 +720,8 @@ class StockApp {
         const fin = Math.min(inicio + porPagina, total);
         const paginaResultados = this.filtrados.slice(inicio, fin);
 
+        console.log('[StockApp] Renderizando página:', this.paginaActual, 'mostrando', inicio+1, 'a', fin);
+
         const tbody = this.elements.resultsTableBody;
         
         if (paginaResultados.length === 0) {
@@ -718,16 +751,24 @@ class StockApp {
         this.elements.nextPageBtn.style.display = this.paginaActual < totalPaginas ? 'inline-block' : 'none';
         
         this.cachedImage = null;
+        
+        console.log('[StockApp] Prev button visible:', this.paginaActual > 1);
+        console.log('[StockApp] Next button visible:', this.paginaActual < totalPaginas);
     }
 
     _cambiarPagina(delta) {
+        console.log('[StockApp] Cambiar página:', delta, 'actual:', this.paginaActual);
         const total = this.filtrados.length;
         const totalPaginas = Math.ceil(total / this.resultadosPorPagina);
         const nuevaPagina = this.paginaActual + delta;
         
-        if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
+        if (nuevaPagina < 1 || nuevaPagina > totalPaginas) {
+            console.log('[StockApp] Página fuera de rango');
+            return;
+        }
         
         this.paginaActual = nuevaPagina;
+        console.log('[StockApp] Nueva página:', this.paginaActual);
         this._renderPagina();
         
         const tableContainer = this.container.querySelector('#tableContainer');
@@ -798,6 +839,7 @@ class StockApp {
     }
 
     async _descargarImagen() {
+        console.log('[StockApp] Descargar imagen - iniciando');
         if (this.filtrados.length === 0) {
             this._showMessage('⚠️ No hay resultados para descargar', 'info', 3000);
             return;
@@ -820,6 +862,7 @@ class StockApp {
             link.click();
             document.body.removeChild(link);
             this._showMessage('📥 Imagen descargada', 'success', 2000);
+            console.log('[StockApp] Imagen descargada correctamente');
         } catch (error) {
             console.error('[StockApp] Error descargando:', error);
             this._showMessage('❌ Error al descargar', 'error', 3000);
@@ -827,6 +870,7 @@ class StockApp {
     }
 
     async _compartirImagen() {
+        console.log('[StockApp] Compartir imagen - iniciando');
         if (this.filtrados.length === 0) {
             this._showMessage('⚠️ No hay resultados para compartir', 'info', 3000);
             return;
@@ -851,6 +895,7 @@ class StockApp {
                     files: [file]
                 });
                 this._showMessage('📤 Compartido correctamente', 'success', 2000);
+                console.log('[StockApp] Imagen compartida correctamente');
             } else {
                 this._showMessage('📱 Compartir no soportado, se descargará', 'info', 2000);
                 this._descargarImagen();
@@ -864,6 +909,7 @@ class StockApp {
     }
 
     _volver() {
+        console.log('[StockApp] Volviendo a búsqueda');
         // Limpiar los campos de búsqueda
         if (this.elements.searchInput) {
             this.elements.searchInput.value = '';
@@ -904,6 +950,7 @@ class StockApp {
 
 // ========== INICIALIZAR ==========
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[StockApp] DOM cargado, iniciando...');
     setTimeout(() => {
         window.stockApp = new StockApp();
     }, 150);
