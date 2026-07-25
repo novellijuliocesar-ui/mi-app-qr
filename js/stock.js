@@ -474,9 +474,32 @@ class StockApp {
 
             <!-- ====== PANTALLA DE RESULTADOS ====== -->
             <div id="resultsScreen" class="results-screen" style="display: none;">
-                <div class="stock-header" style="text-align: center; padding: 15px;">
+                <div class="stock-header" style="text-align: center; padding: 15px 15px 10px 15px;">
                     <h1 style="margin: 0; font-size: 1.2rem;">📊 Resultados de Búsqueda</h1>
-                    <p id="resultsSubtitle" style="margin: 4px 0 0; font-size: 0.8rem;">0 resultados encontrados</p>
+                    <p id="resultsSubtitle" style="margin: 4px 0 10px 0; font-size: 0.8rem;">0 resultados encontrados</p>
+                    
+                    <!-- ====== CONTROLES DE PAGINACIÓN (ARRIBA) ====== -->
+                    <div id="paginationControlsTop" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);">
+                        <span id="paginationInfoTop" style="font-size: 0.75rem; color: #1a1a2e; font-weight: 600;">Mostrando 0 de 0</span>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn btn-small btn-back" id="prevPageBtnTop" style="padding: 4px 12px; font-size: 0.7rem; margin: 0; background: rgba(26,26,46,0.8); color: white;">◀</button>
+                            <span id="pageIndicatorTop" style="font-size: 0.75rem; color: #1a1a2e; font-weight: 600; display: flex; align-items: center; padding: 0 8px;">Página 1</span>
+                            <button class="btn btn-small btn-back" id="nextPageBtnTop" style="padding: 4px 12px; font-size: 0.7rem; margin: 0; background: rgba(26,26,46,0.8); color: white;">▶</button>
+                        </div>
+                    </div>
+                    
+                    <!-- ====== BOTONES DE ACCIÓN (ARRIBA) ====== -->
+                    <div class="action-buttons-top" id="actionButtonsTop" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn btn-small btn-secondary" id="downloadImageBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
+                            📥 Descargar
+                        </button>
+                        <button class="btn btn-small btn-success" id="shareImageBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
+                            📤 Compartir
+                        </button>
+                        <button class="btn btn-small btn-back" id="newSearchBtnTop" style="padding: 6px 12px; font-size: 0.7rem; margin: 0; flex: 1; min-width: 80px;">
+                            ◀ Nueva
+                        </button>
+                    </div>
                 </div>
 
                 <div class="stock-table-container" id="tableContainer">
@@ -498,33 +521,11 @@ class StockApp {
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Paginación -->
-                    <div id="paginationControls" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0 0; flex-wrap: wrap; gap: 8px;">
-                        <span id="paginationInfo" style="font-size: 0.8rem; color: #666;">Mostrando 0 de 0</span>
-                        <div style="display: flex; gap: 6px;">
-                            <button class="btn btn-small btn-back" id="prevPageBtn" style="padding: 4px 12px; font-size: 0.7rem; margin: 0;">◀ Anterior</button>
-                            <span id="pageIndicator" style="font-size: 0.8rem; color: #333; display: flex; align-items: center; padding: 0 8px;">Página 1</span>
-                            <button class="btn btn-small btn-back" id="nextPageBtn" style="padding: 4px 12px; font-size: 0.7rem; margin: 0;">Siguiente ▶</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ====== BOTONES DE ACCIÓN ====== -->
-                <div class="action-buttons" id="actionButtons">
-                    <button class="btn btn-secondary" id="downloadImageBtn">
-                        📥 Descargar imagen
-                    </button>
-                    <button class="btn btn-success" id="shareImageBtn">
-                        📤 Compartir imagen
-                    </button>
-                    <button class="btn btn-back" id="newSearchBtn">
-                        ◀ Nueva búsqueda
-                    </button>
                 </div>
             </div>
         `;
 
+        // Capturar elementos
         this.elements = {
             searchScreen: this.container.querySelector('#searchScreen'),
             resultsScreen: this.container.querySelector('#resultsScreen'),
@@ -534,85 +535,55 @@ class StockApp {
             searchInput: this.container.querySelector('#stockSearchInput'),
             categoryFilter: this.container.querySelector('#categoryFilter'),
             searchBtn: this.container.querySelector('#searchBtn'),
-            prevPageBtn: this.container.querySelector('#prevPageBtn'),
-            nextPageBtn: this.container.querySelector('#nextPageBtn'),
-            pageIndicator: this.container.querySelector('#pageIndicator'),
-            paginationInfo: this.container.querySelector('#paginationInfo'),
-            actionButtons: this.container.querySelector('#actionButtons'),
+            // Nuevos elementos (arriba)
+            prevPageBtnTop: this.container.querySelector('#prevPageBtnTop'),
+            nextPageBtnTop: this.container.querySelector('#nextPageBtnTop'),
+            pageIndicatorTop: this.container.querySelector('#pageIndicatorTop'),
+            paginationInfoTop: this.container.querySelector('#paginationInfoTop'),
+            downloadImageBtnTop: this.container.querySelector('#downloadImageBtnTop'),
+            shareImageBtnTop: this.container.querySelector('#shareImageBtnTop'),
+            newSearchBtnTop: this.container.querySelector('#newSearchBtnTop'),
+            actionButtonsTop: this.container.querySelector('#actionButtonsTop'),
         };
         this.messageEl = this.container.querySelector('#stockMessage');
     }
 
     _setupEventListeners() {
-        // === USAR DELEGACIÓN DE EVENTOS ===
-        const container = this.container;
-
-        // Buscar
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('#searchBtn');
-            if (target) {
-                this._buscar();
-            }
-        });
-
-        // Anterior
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('#prevPageBtn');
-            if (target) {
-                this._cambiarPagina(-1);
-            }
-        });
-
-        // Siguiente
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('#nextPageBtn');
-            if (target) {
-                this._cambiarPagina(1);
-            }
-        });
-
-        // Descargar imagen
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('#downloadImageBtn');
-            if (target) {
-                this._descargarImagen();
-            }
-        });
-
-        // Compartir imagen
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('#shareImageBtn');
-            if (target) {
-                this._compartirImagen();
-            }
-        });
-
-        // Nueva búsqueda
-        container.addEventListener('click', (e) => {
-            const target = e.target.closest('#newSearchBtn');
-            if (target) {
-                this._volver();
-            }
-        });
-
-        // Enter en el campo de búsqueda
-        const searchInput = this.elements.searchInput;
-        if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this._buscar();
-                }
+        // Botón de búsqueda
+        if (this.elements.searchBtn) {
+            this.elements.searchBtn.addEventListener('click', () => this._buscar());
+        }
+        if (this.elements.searchInput) {
+            this.elements.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this._buscar();
             });
         }
 
+        // Paginación (arriba)
+        if (this.elements.prevPageBtnTop) {
+            this.elements.prevPageBtnTop.addEventListener('click', () => this._cambiarPagina(-1));
+        }
+        if (this.elements.nextPageBtnTop) {
+            this.elements.nextPageBtnTop.addEventListener('click', () => this._cambiarPagina(1));
+        }
+
+        // Botones de acción (arriba)
+        if (this.elements.downloadImageBtnTop) {
+            this.elements.downloadImageBtnTop.addEventListener('click', () => this._descargarImagen());
+        }
+        if (this.elements.shareImageBtnTop) {
+            this.elements.shareImageBtnTop.addEventListener('click', () => this._compartirImagen());
+        }
+        if (this.elements.newSearchBtnTop) {
+            this.elements.newSearchBtnTop.addEventListener('click', () => this._volver());
+        }
+
         // Ordenación
-        const resultsTable = this.elements.resultsTable;
-        if (resultsTable) {
-            resultsTable.addEventListener('click', (e) => {
+        if (this.elements.resultsTable) {
+            this.elements.resultsTable.addEventListener('click', (e) => {
                 const th = e.target.closest('th[data-sort]');
                 if (th) {
-                    const key = th.dataset.sort;
-                    this._ordenarPor(key);
+                    this._ordenarPor(th.dataset.sort);
                 }
             });
         }
@@ -668,10 +639,7 @@ class StockApp {
                     </td>
                 </tr>
             `;
-            this.elements.paginationInfo.textContent = 'Mostrando 0 de 0';
-            this.elements.pageIndicator.textContent = 'Página 1';
-            this.elements.prevPageBtn.style.display = 'none';
-            this.elements.nextPageBtn.style.display = 'none';
+            this._actualizarPaginacionTop(0, 0, 1, 1);
             return;
         }
 
@@ -687,14 +655,26 @@ class StockApp {
 
         this._renderPagina();
         this._showMessage(`✅ ${this.filtrados.length} resultados encontrados`, 'success', 2000);
-        
-        // Scroll al inicio de la tabla
-        setTimeout(() => {
-            const tableContainer = this.container.querySelector('#tableContainer');
-            if (tableContainer) {
-                tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 100);
+    }
+
+    _actualizarPaginacionTop(inicio, fin, total, totalPaginas) {
+        const info = this.elements.paginationInfoTop;
+        const indicator = this.elements.pageIndicatorTop;
+        const prevBtn = this.elements.prevPageBtnTop;
+        const nextBtn = this.elements.nextPageBtnTop;
+
+        if (info) {
+            info.textContent = total > 0 ? `Mostrando ${inicio + 1}-${fin} de ${total}` : 'Mostrando 0 de 0';
+        }
+        if (indicator) {
+            indicator.textContent = `Página ${this.paginaActual} de ${totalPaginas || 1}`;
+        }
+        if (prevBtn) {
+            prevBtn.style.display = this.paginaActual > 1 ? 'inline-block' : 'none';
+        }
+        if (nextBtn) {
+            nextBtn.style.display = this.paginaActual < totalPaginas ? 'inline-block' : 'none';
+        }
     }
 
     _renderPagina() {
@@ -702,7 +682,6 @@ class StockApp {
         const porPagina = this.resultadosPorPagina;
         const totalPaginas = Math.ceil(total / porPagina);
         
-        // Asegurar que la página actual es válida
         if (this.paginaActual < 1) this.paginaActual = 1;
         if (this.paginaActual > totalPaginas) {
             this.paginaActual = totalPaginas || 1;
@@ -734,12 +713,7 @@ class StockApp {
             }).join('');
         }
 
-        this.elements.paginationInfo.textContent = `Mostrando ${inicio + 1}-${fin} de ${total} resultados`;
-        this.elements.pageIndicator.textContent = `Página ${this.paginaActual} de ${totalPaginas || 1}`;
-        
-        this.elements.prevPageBtn.style.display = this.paginaActual > 1 ? 'inline-block' : 'none';
-        this.elements.nextPageBtn.style.display = this.paginaActual < totalPaginas ? 'inline-block' : 'none';
-        
+        this._actualizarPaginacionTop(inicio, fin, total, totalPaginas);
         this.cachedImage = null;
     }
 
@@ -755,14 +729,7 @@ class StockApp {
         
         this.paginaActual = nuevaPagina;
         this._renderPagina();
-        
-        // Scroll al inicio de la tabla
-        setTimeout(() => {
-            const tableContainer = this.container.querySelector('#tableContainer');
-            if (tableContainer) {
-                tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 100);
+        this.cachedImage = null;
     }
 
     _ordenarPor(key) {
@@ -780,10 +747,8 @@ class StockApp {
         this.filtrados.sort((a, b) => {
             let valA = a[key] || '';
             let valB = b[key] || '';
-            
             if (typeof valA === 'string') valA = valA.toLowerCase();
             if (typeof valB === 'string') valB = valB.toLowerCase();
-            
             if (valA < valB) return asc ? -1 : 1;
             if (valA > valB) return asc ? 1 : -1;
             return 0;
@@ -796,14 +761,6 @@ class StockApp {
         this.elements.resultsTable.querySelectorAll('th[data-sort]').forEach(th => {
             th.style.color = th.dataset.sort === key ? '#F2C200' : '';
         });
-        
-        // Scroll al inicio de la tabla
-        setTimeout(() => {
-            const tableContainer = this.container.querySelector('#tableContainer');
-            if (tableContainer) {
-                tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 100);
     }
 
     async _generarImagen() {
