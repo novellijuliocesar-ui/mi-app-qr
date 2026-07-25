@@ -425,7 +425,6 @@ class StockApp {
 
         this.container = document.getElementById('stockPage');
         this.elements = {};
-        this.messageEl = null;
 
         this.init();
     }
@@ -543,7 +542,6 @@ class StockApp {
             newSearchBtnTop: this.container.querySelector('#newSearchBtnTop'),
             actionButtonsTop: this.container.querySelector('#actionButtonsTop'),
         };
-        this.messageEl = this.container.querySelector('#stockMessage');
     }
 
     _setupEventListeners() {

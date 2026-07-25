@@ -15,43 +15,47 @@ export function limpiarId(idRaw) {
  * @param {number} duration - Duración en milisegundos (0 = no desaparece)
  */
 export function mostrarMensaje(texto, tipo = 'info', duration = 3000) {
-    // Eliminar toast anterior si existe
-    const existingToast = document.getElementById('toastMessage');
-    if (existingToast) {
-        // Añadir clase de salida
-        existingToast.classList.add('hiding');
-        setTimeout(() => {
-            existingToast.remove();
-        }, 300);
+    // Asegurar que el contenedor existe
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
     }
+
+    // Eliminar toast anterior si existe
+    const existingToasts = container.querySelectorAll('.toast-message');
+    existingToasts.forEach(toast => {
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    });
 
     // Crear nuevo toast
     const toast = document.createElement('div');
-    toast.id = 'toastMessage';
-    toast.className = `toast-message ${tipo} show`;
+    toast.className = `toast-message ${tipo}`;
     toast.textContent = texto;
     
-    // Añadir al contenedor
-    const container = document.getElementById('toastContainer');
-    if (container) {
-        container.appendChild(toast);
-    } else {
-        // Fallback: crear contenedor si no existe
-        const newContainer = document.createElement('div');
-        newContainer.className = 'toast-container';
-        newContainer.id = 'toastContainer';
-        newContainer.appendChild(toast);
-        document.body.appendChild(newContainer);
-    }
+    // Forzar reflow para animación
+    container.appendChild(toast);
+    
+    // Pequeño delay para activar la animación
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+    });
 
     // Auto-ocultar después de la duración especificada
     if (duration > 0) {
         setTimeout(() => {
-            const currentToast = document.getElementById('toastMessage');
-            if (currentToast) {
-                currentToast.classList.add('hiding');
+            if (toast.parentNode) {
+                toast.classList.add('hiding');
                 setTimeout(() => {
-                    currentToast.remove();
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
                 }, 300);
             }
         }, duration);
