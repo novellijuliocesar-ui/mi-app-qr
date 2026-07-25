@@ -75,10 +75,8 @@ html, body {
     -webkit-overflow-scrolling: touch;
     padding: 16px;
     padding-bottom: 80px;
-    /* ===== CENTRADO VERTICAL ===== */
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
 }
 
@@ -100,12 +98,6 @@ html, body {
     .page:not(.stock-page) {
         justify-content: flex-start;
         padding-top: 20px;
-    }
-}
-
-@media (min-height: 800px) {
-    .page:not(.stock-page) {
-        justify-content: center;
     }
 }
 

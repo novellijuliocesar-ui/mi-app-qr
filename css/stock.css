@@ -7,15 +7,28 @@
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    justify-content: flex-start;
 }
 
-.stock-page > * {
+/* Contenedor principal que se ajusta al contenido */
+.stock-page .stock-wrapper {
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex: 0 1 auto;
 }
 
-/* ===== TARJETA PRINCIPAL (mismo estilo que selection-screen) ===== */
+/* Cuando la búsqueda está activa (sin resultados), se alinea arriba */
+.stock-page .stock-wrapper.centered {
+    justify-content: flex-start;
+    flex: 0 1 auto;
+    min-height: auto;
+}
+
+/* ===== TARJETA PRINCIPAL ===== */
 .stock-card {
     background: white;
     border-radius: 20px;
@@ -23,30 +36,9 @@
     margin-bottom: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: column;
 }
 
-/* ===== PANTALLA DE BÚSQUEDA: CENTRADA VERTICALMENTE ===== */
-#searchScreen {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    flex: 1;
-    height: 100%;
-    min-height: calc(100vh - 160px);
-}
-
-/* ===== PANTALLA DE RESULTADOS: ALINEADA ARRIBA ===== */
-#resultsScreen {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    height: auto;
-}
-
-/* ===== HEADER (mismo estilo y TAMAÑOS que el QR) ===== */
+/* ===== HEADER ===== */
 .stock-header {
     background: #F2C200;
     border-radius: 20px;
@@ -69,7 +61,7 @@
     margin: 5px 0 0;
 }
 
-/* ===== BÚSQUEDA Y FILTROS (mismo estilo que el QR) ===== */
+/* ===== BÚSQUEDA Y FILTROS ===== */
 .stock-search-section {
     background: white;
     border-radius: 16px;
@@ -142,7 +134,7 @@
     box-shadow: 0 0 0 3px rgba(242, 194, 0, 0.2);
 }
 
-/* ===== BOTÓN DE BÚSQUEDA (mismo estilo que el QR) ===== */
+/* ===== BOTÓN DE BÚSQUEDA ===== */
 .stock-btn {
     width: 100%;
     padding: 14px;
@@ -165,7 +157,7 @@
     color: #1a1a2e;
 }
 
-/* ========== BOTONES COMUNES (reutilizados) ========== */
+/* ========== BOTONES COMUNES ========== */
 .btn {
     width: 100%;
     padding: 14px;
@@ -212,7 +204,6 @@
 }
 
 /* ========== TABLA DE RESULTADOS ========== */
-
 .stock-table-container {
     background: white;
     border-radius: 16px;
@@ -414,7 +405,7 @@
     }
     
     /* En móvil, la búsqueda se alinea arriba */
-    #searchScreen {
+    .stock-page .stock-wrapper.centered {
         min-height: auto;
         justify-content: flex-start;
         padding-top: 10px;
@@ -424,12 +415,11 @@
 /* ===== Ajustes para pantallas pequeñas ===== */
 @media (max-height: 700px) {
     .stock-page {
-        justify-content: flex-start;
-        padding-top: 20px;
+        padding-top: 10px;
         min-height: auto;
     }
     
-    #searchScreen {
+    .stock-page .stock-wrapper.centered {
         min-height: auto;
         justify-content: flex-start;
         padding-top: 10px;
