@@ -3,10 +3,8 @@
     background: #f5f5f5;
     padding: 16px;
     padding-bottom: 80px;
-    /* Centrado vertical con ajuste al contenido */
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     min-height: 100vh;
 }
@@ -25,25 +23,26 @@
     margin-bottom: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     width: 100%;
-    /* Ajuste automático al contenido */
     height: auto;
     display: flex;
     flex-direction: column;
 }
 
-/* ===== PANTALLA DE BÚSQUEDA ===== */
+/* ===== PANTALLA DE BÚSQUEDA: CENTRADA VERTICALMENTE ===== */
 #searchScreen {
     display: flex;
     flex-direction: column;
-    /* Sin altura fija, se ajusta al contenido */
-    height: auto;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    min-height: calc(100vh - 160px);
 }
 
-/* ===== PANTALLA DE RESULTADOS ===== */
+/* ===== PANTALLA DE RESULTADOS: ALINEADA ARRIBA ===== */
 #resultsScreen {
     display: flex;
     flex-direction: column;
-    /* Sin altura fija, se ajusta al contenido */
+    justify-content: flex-start;
     height: auto;
 }
 
@@ -413,6 +412,13 @@
         padding: 4px 8px;
         min-width: 60px;
     }
+    
+    /* En móvil, la búsqueda se alinea arriba */
+    #searchScreen {
+        min-height: auto;
+        justify-content: flex-start;
+        padding-top: 10px;
+    }
 }
 
 /* ===== Ajustes para pantallas pequeñas ===== */
@@ -421,6 +427,12 @@
         justify-content: flex-start;
         padding-top: 20px;
         min-height: auto;
+    }
+    
+    #searchScreen {
+        min-height: auto;
+        justify-content: flex-start;
+        padding-top: 10px;
     }
 }
 
