@@ -13,7 +13,6 @@ class App {
         this.cachedImage = null;
         this.container = document.getElementById('qrPage');
         this.elements = {};
-        this.messageEl = null;
 
         this.init();
     }
@@ -38,8 +37,6 @@ class App {
                     <h1>📱 Generador de Tarjetas QR</h1>
                     <p>Selecciona o busca un activo del archivo Excel</p>
                 </header>
-
-                <div id="qrMessage" class="message" role="alert" aria-live="polite"></div>
 
                 <div class="search-section">
                     <label for="searchInput">🔍 Buscar (por ID o Código)</label>
@@ -72,7 +69,6 @@ class App {
                     <div id="cardDesc" class="card-desc"></div>
                 </div>
 
-                <!-- BOTONES DE ACCIÓN - SIEMPRE VISIBLES CUANDO LA TARJETA ESTÁ GENERADA -->
                 <div class="action-buttons">
                     <button class="btn btn-secondary" id="downloadCardBtn">
                         📥 Descargar
@@ -92,7 +88,6 @@ class App {
             </div>
         `;
 
-        // Obtener referencias con querySelector
         this.elements = {
             selectionScreen: this.container.querySelector('.selection-screen'),
             cardScreen: this.container.querySelector('#cardScreen'),
@@ -100,12 +95,14 @@ class App {
             searchInput: this.container.querySelector('#searchInput'),
             activoSelect: this.container.querySelector('#activoSelect'),
             generateBtn: this.container.querySelector('#generateBtn'),
+            downloadBtn: this.container.querySelector('#downloadCardBtn'),
+            shareBtn: this.container.querySelector('#shareCardBtn'),
+            backBtn: this.container.querySelector('#backBtn'),
             cardNumber: this.container.querySelector('#cardNumber'),
             cardQr: this.container.querySelector('#cardQr'),
             cardCode: this.container.querySelector('#cardCode'),
             cardDesc: this.container.querySelector('#cardDesc'),
         };
-        this.messageEl = this.container.querySelector('#qrMessage');
 
         console.log('[App] UI construida');
     }
@@ -122,21 +119,14 @@ class App {
         if (this.elements.generateBtn) {
             this.elements.generateBtn.addEventListener('click', this._handleGenerate.bind(this));
         }
-
-        // Botones de la tarjeta - usando IDs directamente
-        const downloadBtn = document.getElementById('downloadCardBtn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this._handleDownload());
+        if (this.elements.downloadBtn) {
+            this.elements.downloadBtn.addEventListener('click', this._handleDownload.bind(this));
         }
-
-        const shareBtn = document.getElementById('shareCardBtn');
-        if (shareBtn) {
-            shareBtn.addEventListener('click', () => this._handleShare());
+        if (this.elements.shareBtn) {
+            this.elements.shareBtn.addEventListener('click', this._handleShare.bind(this));
         }
-
-        const backBtn = document.getElementById('backBtn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => this._handleBack());
+        if (this.elements.backBtn) {
+            this.elements.backBtn.addEventListener('click', this._handleBack.bind(this));
         }
 
         console.log('[App] Event listeners configurados');
@@ -149,9 +139,9 @@ class App {
         console.log('[App] Datos cargados:', this.datos.length);
         
         if (this.datos.length === 0) {
-            this._showMessage('⚠️ No se pudieron cargar los datos. Verifica la consola.', 'error', 5000);
+            mostrarMensaje('⚠️ No se pudieron cargar los datos. Verifica la consola.', 'error', 5000);
         } else {
-            this._showMessage(`✅ ${this.datos.length} activos disponibles`, 'success', 2000);
+            mostrarMensaje(`✅ ${this.datos.length} activos disponibles`, 'success', 2000);
         }
     }
 
@@ -185,9 +175,9 @@ class App {
 
         const count = this.excelLoader.obtenerDatos().length;
         if (term.trim() && count > 0) {
-            this._showMessage(`🔍 ${count} resultados encontrados`, 'success');
+            mostrarMensaje(`🔍 ${count} resultados encontrados`, 'success');
         } else if (term.trim() && count === 0) {
-            this._showMessage('🔍 No se encontraron resultados', 'info');
+            mostrarMensaje('🔍 No se encontraron resultados', 'info');
         }
     }
 
@@ -196,13 +186,13 @@ class App {
         this.currentItem = this.excelLoader.obtenerPorIndice(index);
         
         if (this.currentItem) {
-            this._showMessage(`✅ Seleccionado: ${this.currentItem.codigo}`, 'success');
+            mostrarMensaje(`✅ Seleccionado: ${this.currentItem.codigo}`, 'success');
         }
     }
 
     async _handleGenerate() {
         if (!this.currentItem) {
-            this._showMessage('❌ Primero selecciona un activo de la lista', 'error');
+            mostrarMensaje('❌ Primero selecciona un activo de la lista', 'error');
             return;
         }
 
@@ -229,7 +219,7 @@ class App {
 
         } catch (error) {
             console.error('[App] Error al generar:', error);
-            this._showMessage('❌ Error al generar la tarjeta', 'error');
+            mostrarMensaje('❌ Error al generar la tarjeta', 'error');
             this._showSelection();
         } finally {
             this._showLoading(false);
@@ -262,10 +252,10 @@ class App {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            this._showMessage('📥 Tarjeta descargada', 'success');
+            mostrarMensaje('📥 Tarjeta descargada', 'success');
         } catch (error) {
             console.error('[App] Error al descargar:', error);
-            this._showMessage('❌ Error al descargar', 'error');
+            mostrarMensaje('❌ Error al descargar', 'error');
         }
     }
 
@@ -288,15 +278,15 @@ class App {
                     text: `Tarjeta para ${this.currentItem.codigo}`,
                     files: [file]
                 });
-                this._showMessage('📤 Compartido correctamente', 'success');
+                mostrarMensaje('📤 Compartido correctamente', 'success');
             } else {
-                this._showMessage('📱 Compartir no soportado, se descargará', 'info');
+                mostrarMensaje('📱 Compartir no soportado, se descargará', 'info');
                 this._handleDownload();
             }
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('[App] Error al compartir:', error);
-                this._showMessage('❌ Error al compartir', 'error');
+                mostrarMensaje('❌ Error al compartir', 'error');
             }
         }
     }
@@ -314,7 +304,7 @@ class App {
         this._poblarSelect();
         
         this._showSelection();
-        this._showMessage('🔄 Campos limpiados', 'info', 2000);
+        mostrarMensaje('🔄 Campos limpiados', 'info', 2000);
     }
 
     _showLoading(show) {
@@ -350,19 +340,6 @@ class App {
         }
         if (this.elements.loading) {
             this.elements.loading.hidden = true;
-        }
-    }
-
-    _showMessage(texto, tipo = 'info', duration = 3000) {
-        if (!this.messageEl) return;
-        this.messageEl.textContent = texto;
-        this.messageEl.className = `message message-${tipo}`;
-        this.messageEl.style.display = 'block';
-        
-        if (duration > 0) {
-            setTimeout(() => {
-                this.messageEl.style.display = 'none';
-            }, duration);
         }
     }
 }

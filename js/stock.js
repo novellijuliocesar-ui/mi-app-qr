@@ -525,7 +525,6 @@ class StockApp {
             </div>
         `;
 
-        // Capturar elementos
         this.elements = {
             searchScreen: this.container.querySelector('#searchScreen'),
             resultsScreen: this.container.querySelector('#resultsScreen'),
@@ -535,7 +534,6 @@ class StockApp {
             searchInput: this.container.querySelector('#stockSearchInput'),
             categoryFilter: this.container.querySelector('#categoryFilter'),
             searchBtn: this.container.querySelector('#searchBtn'),
-            // Nuevos elementos (arriba)
             prevPageBtnTop: this.container.querySelector('#prevPageBtnTop'),
             nextPageBtnTop: this.container.querySelector('#nextPageBtnTop'),
             pageIndicatorTop: this.container.querySelector('#pageIndicatorTop'),
@@ -549,7 +547,6 @@ class StockApp {
     }
 
     _setupEventListeners() {
-        // Botón de búsqueda
         if (this.elements.searchBtn) {
             this.elements.searchBtn.addEventListener('click', () => this._buscar());
         }
@@ -559,7 +556,6 @@ class StockApp {
             });
         }
 
-        // Paginación (arriba)
         if (this.elements.prevPageBtnTop) {
             this.elements.prevPageBtnTop.addEventListener('click', () => this._cambiarPagina(-1));
         }
@@ -567,7 +563,6 @@ class StockApp {
             this.elements.nextPageBtnTop.addEventListener('click', () => this._cambiarPagina(1));
         }
 
-        // Botones de acción (arriba)
         if (this.elements.downloadImageBtnTop) {
             this.elements.downloadImageBtnTop.addEventListener('click', () => this._descargarImagen());
         }
@@ -578,7 +573,6 @@ class StockApp {
             this.elements.newSearchBtnTop.addEventListener('click', () => this._volver());
         }
 
-        // Ordenación
         if (this.elements.resultsTable) {
             this.elements.resultsTable.addEventListener('click', (e) => {
                 const th = e.target.closest('th[data-sort]');
@@ -590,10 +584,10 @@ class StockApp {
     }
 
     async _cargarDatos() {
-        this._showMessage('📂 Cargando datos de repuestos...', 'info', 0);
+        mostrarMensaje('📂 Cargando datos de repuestos...', 'info', 0);
         this.datos = await this.loader.cargar();
         if (this.loader.usaEjemplo) {
-            this._showMessage(`⚠️ Usando datos de ejemplo (${this.datos.length} repuestos)`, 'info', 4000);
+            mostrarMensaje(`⚠️ Usando datos de ejemplo (${this.datos.length} repuestos)`, 'info', 4000);
         }
     }
 
@@ -615,7 +609,7 @@ class StockApp {
         const categoria = this.elements.categoryFilter.value;
 
         if (!termino && !categoria) {
-            this._showMessage('⚠️ Introduce un término de búsqueda o selecciona una categoría', 'info', 3000);
+            mostrarMensaje('⚠️ Introduce un término de búsqueda o selecciona una categoría', 'info', 3000);
             return;
         }
 
@@ -627,7 +621,7 @@ class StockApp {
         this.cachedImage = null;
 
         if (this.filtrados.length === 0) {
-            this._showMessage(`🔍 No se encontraron resultados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`, 'info', 3000);
+            mostrarMensaje(`🔍 No se encontraron resultados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`, 'info', 3000);
             this.elements.resultsScreen.style.display = 'block';
             this.elements.searchScreen.style.display = 'none';
             this.elements.resultsSubtitle.textContent = `🔍 0 resultados encontrados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`;
@@ -654,7 +648,7 @@ class StockApp {
             `🔍 ${this.filtrados.length} resultados encontrados${this.terminoBusqueda ? ` para "${this.terminoBusqueda}"` : ''}${this.categoriaBusqueda ? ` en ${this.categoriaBusqueda}` : ''}`;
 
         this._renderPagina();
-        this._showMessage(`✅ ${this.filtrados.length} resultados encontrados`, 'success', 2000);
+        mostrarMensaje(`✅ ${this.filtrados.length} resultados encontrados`, 'success', 2000);
     }
 
     _actualizarPaginacionTop(inicio, fin, total, totalPaginas) {
@@ -723,7 +717,7 @@ class StockApp {
         const nuevaPagina = this.paginaActual + delta;
         
         if (nuevaPagina < 1 || nuevaPagina > totalPaginas) {
-            this._showMessage(`⚠️ Ya estás en la ${nuevaPagina < 1 ? 'primera' : 'última'} página`, 'info', 2000);
+            mostrarMensaje(`⚠️ Ya estás en la ${nuevaPagina < 1 ? 'primera' : 'última'} página`, 'info', 2000);
             return;
         }
         
@@ -771,7 +765,7 @@ class StockApp {
         const paginaResultados = this.filtrados.slice(inicio, fin);
 
         if (paginaResultados.length === 0) {
-            this._showMessage('⚠️ No hay datos en esta página para generar imagen', 'info', 3000);
+            mostrarMensaje('⚠️ No hay datos en esta página para generar imagen', 'info', 3000);
             return null;
         }
 
@@ -786,22 +780,22 @@ class StockApp {
             return imageData;
         } catch (error) {
             console.error('[StockApp] Error generando imagen:', error);
-            this._showMessage('❌ Error al generar la imagen', 'error', 3000);
+            mostrarMensaje('❌ Error al generar la imagen', 'error', 3000);
             return null;
         }
     }
 
     async _descargarImagen() {
         if (this.filtrados.length === 0) {
-            this._showMessage('⚠️ No hay resultados para descargar', 'info', 3000);
+            mostrarMensaje('⚠️ No hay resultados para descargar', 'info', 3000);
             return;
         }
 
-        this._showMessage('🖼️ Generando imagen...', 'info', 0);
+        mostrarMensaje('🖼️ Generando imagen...', 'info', 0);
 
         const imageData = await this._generarImagen();
         if (!imageData) {
-            this._showMessage('❌ Error al generar la imagen', 'error', 3000);
+            mostrarMensaje('❌ Error al generar la imagen', 'error', 3000);
             return;
         }
 
@@ -813,24 +807,24 @@ class StockApp {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            this._showMessage('📥 Imagen descargada', 'success', 2000);
+            mostrarMensaje('📥 Imagen descargada', 'success', 2000);
         } catch (error) {
             console.error('[StockApp] Error descargando:', error);
-            this._showMessage('❌ Error al descargar', 'error', 3000);
+            mostrarMensaje('❌ Error al descargar', 'error', 3000);
         }
     }
 
     async _compartirImagen() {
         if (this.filtrados.length === 0) {
-            this._showMessage('⚠️ No hay resultados para compartir', 'info', 3000);
+            mostrarMensaje('⚠️ No hay resultados para compartir', 'info', 3000);
             return;
         }
 
-        this._showMessage('🖼️ Generando imagen...', 'info', 0);
+        mostrarMensaje('🖼️ Generando imagen...', 'info', 0);
 
         const imageData = await this._generarImagen();
         if (!imageData) {
-            this._showMessage('❌ Error al generar la imagen', 'error', 3000);
+            mostrarMensaje('❌ Error al generar la imagen', 'error', 3000);
             return;
         }
 
@@ -844,15 +838,15 @@ class StockApp {
                     text: `📦 ${this.filtrados.length} repuestos encontrados${this.terminoBusqueda ? ` para "${this.terminoBusqueda}"` : ''} (Página ${this.paginaActual})`,
                     files: [file]
                 });
-                this._showMessage('📤 Compartido correctamente', 'success', 2000);
+                mostrarMensaje('📤 Compartido correctamente', 'success', 2000);
             } else {
-                this._showMessage('📱 Compartir no soportado, se descargará', 'info', 2000);
+                mostrarMensaje('📱 Compartir no soportado, se descargará', 'info', 2000);
                 this._descargarImagen();
             }
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('[StockApp] Error compartiendo:', error);
-                this._showMessage('❌ Error al compartir', 'error', 3000);
+                mostrarMensaje('❌ Error al compartir', 'error', 3000);
             }
         }
     }
@@ -876,20 +870,7 @@ class StockApp {
         this.terminoBusqueda = '';
         this.categoriaBusqueda = '';
         
-        this._showMessage('🔄 Campos limpiados. Realiza una nueva búsqueda.', 'info', 2000);
-    }
-
-    _showMessage(texto, tipo = 'info', duration = 3000) {
-        if (!this.messageEl) return;
-        this.messageEl.textContent = texto;
-        this.messageEl.className = `message message-${tipo}`;
-        this.messageEl.style.display = 'block';
-        
-        if (duration > 0) {
-            setTimeout(() => {
-                this.messageEl.style.display = 'none';
-            }, duration);
-        }
+        mostrarMensaje('🔄 Campos limpiados. Realiza una nueva búsqueda.', 'info', 2000);
     }
 }
 

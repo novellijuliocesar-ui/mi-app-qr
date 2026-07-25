@@ -10,7 +10,7 @@
     <!-- MANIFEST -->
     <link rel="manifest" href="./manifest.json">
     
-    <!-- ===== CSS (rutas relativas para compatibilidad) ===== -->
+    <!-- ===== CSS ===== -->
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/stock.css">
     
@@ -36,14 +36,14 @@
         </div>
     </div>
 
+    <!-- ====== CONTENEDOR DE MENSAJES FLOTANTES ====== -->
+    <div class="toast-container" id="toastContainer">
+        <div id="toastMessage" class="toast-message" role="alert" aria-live="polite"></div>
+    </div>
+
     <!-- ====== SCRIPTS ====== -->
-    <!-- Sistema de navegación -->
     <script type="module" src="./js/navigation.js"></script>
-    
-    <!-- App QR Generator -->
     <script type="module" src="./js/app.js"></script>
-    
-    <!-- App Stock Search -->
     <script type="module" src="./js/stock.js"></script>
 </body>
 </html>
