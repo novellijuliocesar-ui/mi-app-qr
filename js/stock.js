@@ -420,10 +420,22 @@ class StockApp {
         this.paginaActual = 1;
         this.resultadosPorPagina = 25;
         this.cachedImage = null;
+        this._ultimaOrden = null;
+        this._ordenAscendente = true;
 
         this.container = document.getElementById('stockPage');
         this.elements = {};
         this.messageEl = null;
+
+        // Bind de métodos para asegurar el contexto
+        this._buscar = this._buscar.bind(this);
+        this._volver = this._volver.bind(this);
+        this._cambiarPagina = this._cambiarPagina.bind(this);
+        this._ordenarPor = this._ordenarPor.bind(this);
+        this._descargarImagen = this._descargarImagen.bind(this);
+        this._compartirImagen = this._compartirImagen.bind(this);
+        this._renderPagina = this._renderPagina.bind(this);
+        this._mostrarResultados = this._mostrarResultados.bind(this);
 
         this.init();
     }
@@ -544,7 +556,7 @@ class StockApp {
     _setupEventListeners() {
         // Búsqueda
         if (this.elements.searchBtn) {
-            this.elements.searchBtn.addEventListener('click', () => this._buscar());
+            this.elements.searchBtn.addEventListener('click', this._buscar);
         }
         if (this.elements.searchInput) {
             this.elements.searchInput.addEventListener('keypress', (e) => {
@@ -554,28 +566,32 @@ class StockApp {
             });
         }
 
-        // Paginación
+        // Paginación - Usando arrow functions para mantener el contexto
         if (this.elements.prevPageBtn) {
-            this.elements.prevPageBtn.addEventListener('click', () => this._cambiarPagina(-1));
+            this.elements.prevPageBtn.addEventListener('click', () => {
+                this._cambiarPagina(-1);
+            });
         }
         if (this.elements.nextPageBtn) {
-            this.elements.nextPageBtn.addEventListener('click', () => this._cambiarPagina(1));
+            this.elements.nextPageBtn.addEventListener('click', () => {
+                this._cambiarPagina(1);
+            });
         }
 
-        // Botones de acción - usando IDs directamente
+        // Botones de acción - Usando arrow functions
         const downloadBtn = document.getElementById('downloadImageBtn');
         if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this._descargarImagen());
+            downloadBtn.addEventListener('click', this._descargarImagen);
         }
 
         const shareBtn = document.getElementById('shareImageBtn');
         if (shareBtn) {
-            shareBtn.addEventListener('click', () => this._compartirImagen());
+            shareBtn.addEventListener('click', this._compartirImagen);
         }
 
         const newSearchBtn = document.getElementById('newSearchBtn');
         if (newSearchBtn) {
-            newSearchBtn.addEventListener('click', () => this._volver());
+            newSearchBtn.addEventListener('click', this._volver);
         }
 
         // Ordenación
