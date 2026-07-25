@@ -115,6 +115,14 @@ html, body {
     color: white;
 }
 
+.btn-small {
+    padding: 6px 14px;
+    width: auto;
+    font-size: 0.75rem;
+    margin: 0;
+    border-radius: 8px;
+}
+
 /* ========== PANTALLA DE SELECCIÓN ========== */
 .selection-screen {
     background: white;
@@ -177,7 +185,7 @@ input:focus, select:focus {
     margin-bottom: 15px;
 }
 
-/* ========== PANTALLA DE TARJETA ========== */
+/* ========== PANTALLA DE TARJETA QR ========== */
 .card-screen {
     background: white;
     border-radius: 20px;
@@ -244,15 +252,33 @@ input:focus, select:focus {
     margin-top: 10px;
 }
 
-.action-buttons {
+/* ========== BOTONES DE ACCIÓN PARA TARJETA QR ========== */
+.card-screen .action-buttons {
     display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-top: 20px;
 }
 
-.action-buttons .btn {
-    flex: 1;
-    margin-top: 0;
+.card-screen .action-buttons .btn {
+    margin: 0;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Botones en fila para pantallas grandes */
+@media (min-width: 500px) {
+    .card-screen .action-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .card-screen .action-buttons .btn {
+        flex: 1;
+        min-width: 120px;
+    }
 }
 
 /* ========== MENSAJES ========== */

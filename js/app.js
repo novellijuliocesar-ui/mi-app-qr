@@ -14,7 +14,6 @@ class App {
         this.container = document.getElementById('qrPage');
         this.elements = {};
         this.messageEl = null;
-        this.isLoading = false;
 
         this.init();
     }
@@ -73,6 +72,7 @@ class App {
                     <div id="cardDesc" class="card-desc"></div>
                 </div>
 
+                <!-- BOTONES DE ACCIÓN - SIEMPRE VISIBLES CUANDO LA TARJETA ESTÁ GENERADA -->
                 <div class="action-buttons">
                     <button class="btn btn-secondary" id="downloadCardBtn">
                         📥 Descargar
@@ -100,9 +100,6 @@ class App {
             searchInput: this.container.querySelector('#searchInput'),
             activoSelect: this.container.querySelector('#activoSelect'),
             generateBtn: this.container.querySelector('#generateBtn'),
-            downloadBtn: this.container.querySelector('#downloadCardBtn'),
-            shareBtn: this.container.querySelector('#shareCardBtn'),
-            backBtn: this.container.querySelector('#backBtn'),
             cardNumber: this.container.querySelector('#cardNumber'),
             cardQr: this.container.querySelector('#cardQr'),
             cardCode: this.container.querySelector('#cardCode'),
@@ -125,14 +122,21 @@ class App {
         if (this.elements.generateBtn) {
             this.elements.generateBtn.addEventListener('click', this._handleGenerate.bind(this));
         }
-        if (this.elements.downloadBtn) {
-            this.elements.downloadBtn.addEventListener('click', this._handleDownload.bind(this));
+
+        // Botones de la tarjeta - usando IDs directamente
+        const downloadBtn = document.getElementById('downloadCardBtn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this._handleDownload());
         }
-        if (this.elements.shareBtn) {
-            this.elements.shareBtn.addEventListener('click', this._handleShare.bind(this));
+
+        const shareBtn = document.getElementById('shareCardBtn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => this._handleShare());
         }
-        if (this.elements.backBtn) {
-            this.elements.backBtn.addEventListener('click', this._handleBack.bind(this));
+
+        const backBtn = document.getElementById('backBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => this._handleBack());
         }
 
         console.log('[App] Event listeners configurados');

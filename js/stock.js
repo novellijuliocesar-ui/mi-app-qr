@@ -366,8 +366,6 @@ class StockLoader {
         const busquedaNormalizada = normalizarTexto(termino);
         const categoriaNormalizada = normalizarTexto(categoria);
 
-        console.log('[StockLoader] Buscando - término:', termino, 'categoría:', categoria);
-
         const resultados = this.datosNormalizados
             .filter(item => {
                 const norm = item._normalizado;
@@ -398,7 +396,6 @@ class StockLoader {
             });
 
         this.filtrados = resultados;
-        console.log(`[StockLoader] ✅ ${this.filtrados.length} resultados encontrados`);
         return this.filtrados;
     }
 
@@ -512,7 +509,7 @@ class StockApp {
                 </div>
 
                 <!-- ====== BOTONES DE ACCIÓN ====== -->
-                <div class="action-buttons" id="actionButtons" style="margin-top: 16px; display: none;">
+                <div class="action-buttons" id="actionButtons">
                     <button class="btn btn-secondary" id="downloadImageBtn">
                         📥 Descargar imagen
                     </button>
@@ -539,35 +536,57 @@ class StockApp {
             nextPageBtn: this.container.querySelector('#nextPageBtn'),
             pageIndicator: this.container.querySelector('#pageIndicator'),
             paginationInfo: this.container.querySelector('#paginationInfo'),
-            downloadImageBtn: this.container.querySelector('#downloadImageBtn'),
-            shareImageBtn: this.container.querySelector('#shareImageBtn'),
-            newSearchBtn: this.container.querySelector('#newSearchBtn'),
             actionButtons: this.container.querySelector('#actionButtons'),
         };
         this.messageEl = this.container.querySelector('#stockMessage');
     }
 
     _setupEventListeners() {
-        this.elements.searchBtn.addEventListener('click', () => this._buscar());
-        this.elements.searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this._buscar();
-            }
-        });
-        this.elements.newSearchBtn.addEventListener('click', () => this._volver());
-        this.elements.prevPageBtn.addEventListener('click', () => this._cambiarPagina(-1));
-        this.elements.nextPageBtn.addEventListener('click', () => this._cambiarPagina(1));
-        this.elements.downloadImageBtn.addEventListener('click', () => this._descargarImagen());
-        this.elements.shareImageBtn.addEventListener('click', () => this._compartirImagen());
-
-        this.elements.resultsTable.querySelectorAll('th[data-sort]').forEach(th => {
-            th.addEventListener('click', () => {
-                const key = th.dataset.sort;
-                this._ordenarPor(key);
+        // Búsqueda
+        if (this.elements.searchBtn) {
+            this.elements.searchBtn.addEventListener('click', () => this._buscar());
+        }
+        if (this.elements.searchInput) {
+            this.elements.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this._buscar();
+                }
             });
-        });
+        }
 
-        console.log('[StockApp] Selector de categorías inicializado');
+        // Paginación
+        if (this.elements.prevPageBtn) {
+            this.elements.prevPageBtn.addEventListener('click', () => this._cambiarPagina(-1));
+        }
+        if (this.elements.nextPageBtn) {
+            this.elements.nextPageBtn.addEventListener('click', () => this._cambiarPagina(1));
+        }
+
+        // Botones de acción - usando IDs directamente
+        const downloadBtn = document.getElementById('downloadImageBtn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this._descargarImagen());
+        }
+
+        const shareBtn = document.getElementById('shareImageBtn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => this._compartirImagen());
+        }
+
+        const newSearchBtn = document.getElementById('newSearchBtn');
+        if (newSearchBtn) {
+            newSearchBtn.addEventListener('click', () => this._volver());
+        }
+
+        // Ordenación
+        if (this.elements.resultsTable) {
+            this.elements.resultsTable.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.sort;
+                    this._ordenarPor(key);
+                });
+            });
+        }
     }
 
     async _cargarDatos() {
@@ -576,14 +595,11 @@ class StockApp {
         if (this.loader.usaEjemplo) {
             this._showMessage(`⚠️ Usando datos de ejemplo (${this.datos.length} repuestos)`, 'info', 4000);
         }
-        console.log('[StockApp] Categorías cargadas:', this.loader.obtenerCategorias());
     }
 
     _poblarFiltros() {
         const select = this.elements.categoryFilter;
         const categorias = this.loader.obtenerCategorias();
-        
-        console.log('[StockApp] Poblando filtros con categorías:', categorias);
         
         select.innerHTML = '<option value="">-- Todas --</option>';
         categorias.forEach(cat => {
@@ -598,8 +614,6 @@ class StockApp {
         const termino = this.elements.searchInput.value.trim();
         const categoria = this.elements.categoryFilter.value;
 
-        console.log('[StockApp] 🔍 Buscando:', { termino, categoria });
-
         if (!termino && !categoria) {
             this._showMessage('⚠️ Introduce un término de búsqueda o selecciona una categoría', 'info', 3000);
             return;
@@ -611,8 +625,6 @@ class StockApp {
         this.filtrados = this.loader.buscar(termino, categoria);
         this.paginaActual = 1;
         this.cachedImage = null;
-
-        console.log('[StockApp] Resultados encontrados:', this.filtrados.length);
 
         if (this.filtrados.length === 0) {
             this._showMessage(`🔍 No se encontraron resultados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`, 'info', 3000);
@@ -631,18 +643,15 @@ class StockApp {
             this.elements.pageIndicator.textContent = 'Página 1';
             this.elements.prevPageBtn.style.display = 'none';
             this.elements.nextPageBtn.style.display = 'none';
-            this.elements.actionButtons.style.display = 'none';
             return;
         }
 
-        this.elements.actionButtons.style.display = 'flex';
         await this._mostrarResultados();
     }
 
     async _mostrarResultados() {
         this.elements.searchScreen.style.display = 'none';
         this.elements.resultsScreen.style.display = 'block';
-        this.elements.actionButtons.style.display = 'flex';
 
         this.elements.resultsSubtitle.textContent = 
             `🔍 ${this.filtrados.length} resultados encontrados${this.terminoBusqueda ? ` para "${this.terminoBusqueda}"` : ''}${this.categoriaBusqueda ? ` en ${this.categoriaBusqueda}` : ''}`;
@@ -857,11 +866,9 @@ class StockApp {
         this.cachedImage = null;
         this._ultimaOrden = null;
         this._ordenAscendente = true;
-        this.elements.actionButtons.style.display = 'none';
         this.terminoBusqueda = '';
         this.categoriaBusqueda = '';
         
-        // Limpiar mensajes
         this._showMessage('🔄 Campos limpiados. Realiza una nueva búsqueda.', 'info', 2000);
     }
 
