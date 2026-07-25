@@ -75,6 +75,38 @@ html, body {
     -webkit-overflow-scrolling: touch;
     padding: 16px;
     padding-bottom: 80px;
+    /* ===== CENTRADO VERTICAL ===== */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Los contenedores internos de cada página */
+.page > * {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ===== EXCEPCIÓN: La página de stock no debe centrarse verticalmente ===== */
+.stock-page {
+    justify-content: flex-start;
+    padding-top: 16px;
+}
+
+/* ===== RESPONSIVE: En pantallas pequeñas, reducir el centrado ===== */
+@media (max-height: 700px) {
+    .page:not(.stock-page) {
+        justify-content: flex-start;
+        padding-top: 20px;
+    }
+}
+
+@media (min-height: 800px) {
+    .page:not(.stock-page) {
+        justify-content: center;
+    }
 }
 
 /* ========== COMPONENTES COMUNES ========== */
