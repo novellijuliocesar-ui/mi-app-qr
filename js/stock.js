@@ -427,12 +427,19 @@ class StockApp {
         this.elements = {};
         this.messageEl = null;
 
+        // Bind de métodos para asegurar el contexto
+        this._buscar = this._buscar.bind(this);
+        this._volver = this._volver.bind(this);
+        this._cambiarPagina = this._cambiarPagina.bind(this);
+        this._ordenarPor = this._ordenarPor.bind(this);
+        this._descargarImagen = this._descargarImagen.bind(this);
+        this._compartirImagen = this._compartirImagen.bind(this);
+
         this.init();
     }
 
     async init() {
         this._buildUI();
-        // Primero cargar datos y luego configurar eventos
         await this._cargarDatos();
         this._poblarFiltros();
         this._setupEventListeners();
@@ -526,7 +533,7 @@ class StockApp {
             </div>
         `;
 
-        // Capturar elementos después de construir el HTML
+        // Capturar elementos
         this.elements = {
             searchScreen: this.container.querySelector('#searchScreen'),
             resultsScreen: this.container.querySelector('#resultsScreen'),
@@ -543,93 +550,93 @@ class StockApp {
             actionButtons: this.container.querySelector('#actionButtons'),
         };
         this.messageEl = this.container.querySelector('#stockMessage');
-
-        // Guardar referencias de los botones de acción por ID para acceder después
-        this._downloadBtn = document.getElementById('downloadImageBtn');
-        this._shareBtn = document.getElementById('shareImageBtn');
-        this._newSearchBtn = document.getElementById('newSearchBtn');
     }
 
     _setupEventListeners() {
-        console.log('[StockApp] Configurando event listeners...');
+        const container = this.container;
 
-        // Búsqueda
-        if (this.elements.searchBtn) {
-            this.elements.searchBtn.addEventListener('click', () => {
-                console.log('[StockApp] Click en buscar');
+        // === USAR DELEGACIÓN DE EVENTOS ===
+        // Todos los eventos se manejan desde el contenedor principal
+
+        // Buscar
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('#searchBtn');
+            if (target) {
+                console.log('[StockApp] Click en buscar (delegado)');
                 this._buscar();
-            });
-        }
-        if (this.elements.searchInput) {
-            this.elements.searchInput.addEventListener('keypress', (e) => {
+            }
+        });
+
+        // Anterior
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('#prevPageBtn');
+            if (target) {
+                console.log('[StockApp] Click en anterior (delegado)');
+                this._cambiarPagina(-1);
+            }
+        });
+
+        // Siguiente
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('#nextPageBtn');
+            if (target) {
+                console.log('[StockApp] Click en siguiente (delegado)');
+                this._cambiarPagina(1);
+            }
+        });
+
+        // Descargar imagen
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('#downloadImageBtn');
+            if (target) {
+                console.log('[StockApp] Click en descargar imagen (delegado)');
+                this._descargarImagen();
+            }
+        });
+
+        // Compartir imagen
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('#shareImageBtn');
+            if (target) {
+                console.log('[StockApp] Click en compartir imagen (delegado)');
+                this._compartirImagen();
+            }
+        });
+
+        // Nueva búsqueda
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest('#newSearchBtn');
+            if (target) {
+                console.log('[StockApp] Click en nueva búsqueda (delegado)');
+                this._volver();
+            }
+        });
+
+        // Enter en el campo de búsqueda
+        const searchInput = this.elements.searchInput;
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    console.log('[StockApp] Enter en buscar');
+                    console.log('[StockApp] Enter en búsqueda');
                     this._buscar();
                 }
             });
         }
 
-        // Paginación
-        if (this.elements.prevPageBtn) {
-            this.elements.prevPageBtn.addEventListener('click', () => {
-                console.log('[StockApp] Click en anterior');
-                this._cambiarPagina(-1);
-            });
-        }
-        if (this.elements.nextPageBtn) {
-            this.elements.nextPageBtn.addEventListener('click', () => {
-                console.log('[StockApp] Click en siguiente');
-                this._cambiarPagina(1);
-            });
-        }
-
-        // Botones de acción
-        if (this._downloadBtn) {
-            this._downloadBtn.addEventListener('click', () => {
-                console.log('[StockApp] Click en descargar imagen');
-                this._descargarImagen();
-            });
-        } else {
-            console.warn('[StockApp] No se encontró downloadImageBtn');
-        }
-
-        if (this._shareBtn) {
-            this._shareBtn.addEventListener('click', () => {
-                console.log('[StockApp] Click en compartir imagen');
-                this._compartirImagen();
-            });
-        } else {
-            console.warn('[StockApp] No se encontró shareImageBtn');
-        }
-
-        if (this._newSearchBtn) {
-            this._newSearchBtn.addEventListener('click', () => {
-                console.log('[StockApp] Click en nueva búsqueda');
-                this._volver();
-            });
-        } else {
-            console.warn('[StockApp] No se encontró newSearchBtn');
-        }
-
         // Ordenación
-        if (this.elements.resultsTable) {
-            this.elements.resultsTable.querySelectorAll('th[data-sort]').forEach(th => {
-                th.addEventListener('click', () => {
+        const resultsTable = this.elements.resultsTable;
+        if (resultsTable) {
+            resultsTable.addEventListener('click', (e) => {
+                const th = e.target.closest('th[data-sort]');
+                if (th) {
                     const key = th.dataset.sort;
                     console.log('[StockApp] Ordenar por:', key);
                     this._ordenarPor(key);
-                });
+                }
             });
         }
 
-        console.log('[StockApp] Event listeners configurados');
-        console.log('[StockApp] Botones:', {
-            download: !!this._downloadBtn,
-            share: !!this._shareBtn,
-            newSearch: !!this._newSearchBtn,
-            prev: !!this.elements.prevPageBtn,
-            next: !!this.elements.nextPageBtn
-        });
+        console.log('[StockApp] Event listeners configurados por delegación');
     }
 
     async _cargarDatos() {
@@ -720,8 +727,6 @@ class StockApp {
         const fin = Math.min(inicio + porPagina, total);
         const paginaResultados = this.filtrados.slice(inicio, fin);
 
-        console.log('[StockApp] Renderizando página:', this.paginaActual, 'mostrando', inicio+1, 'a', fin);
-
         const tbody = this.elements.resultsTableBody;
         
         if (paginaResultados.length === 0) {
@@ -751,9 +756,6 @@ class StockApp {
         this.elements.nextPageBtn.style.display = this.paginaActual < totalPaginas ? 'inline-block' : 'none';
         
         this.cachedImage = null;
-        
-        console.log('[StockApp] Prev button visible:', this.paginaActual > 1);
-        console.log('[StockApp] Next button visible:', this.paginaActual < totalPaginas);
     }
 
     _cambiarPagina(delta) {
@@ -910,7 +912,6 @@ class StockApp {
 
     _volver() {
         console.log('[StockApp] Volviendo a búsqueda');
-        // Limpiar los campos de búsqueda
         if (this.elements.searchInput) {
             this.elements.searchInput.value = '';
         }
@@ -918,11 +919,9 @@ class StockApp {
             this.elements.categoryFilter.value = '';
         }
         
-        // Ocultar resultados y mostrar búsqueda
         this.elements.resultsScreen.style.display = 'none';
         this.elements.searchScreen.style.display = 'block';
         
-        // Limpiar datos de resultados
         this.filtrados = [];
         this.paginaActual = 1;
         this.cachedImage = null;
