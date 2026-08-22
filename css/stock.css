@@ -17,7 +17,8 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    flex: 1 0 auto;
+    justify-content: flex-start;
+    flex: 0 1 auto;
 }
 
 /* Cuando la búsqueda está activa (sin resultados), se centra */
@@ -25,13 +26,6 @@
     justify-content: center;
     flex: 1;
     min-height: calc(100vh - 160px);
-}
-
-/* Cuando se muestran los resultados, NO se centra */
-.stock-page .stock-wrapper:not(.centered) {
-    justify-content: flex-start;
-    flex: 0 1 auto;
-    min-height: auto;
 }
 
 /* ===== TARJETA PRINCIPAL ===== */
@@ -218,6 +212,12 @@
     overflow: hidden;
 }
 
+#resultsTableWrapper {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
 .stock-table {
     width: 100%;
     border-collapse: collapse;
@@ -237,6 +237,7 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    background: #1a1a2e;
 }
 
 .stock-table thead th[data-sort]:hover {
@@ -308,16 +309,6 @@
     border-left: 4px solid #17a2b8;
 }
 
-/* ========== PAGINACIÓN ========== */
-#paginationControlsTop {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
 /* ========== BOTONES DE ACCIÓN EN LA PARTE SUPERIOR ========== */
 .action-buttons-top {
     display: flex;
@@ -335,8 +326,43 @@
     min-width: 80px;
 }
 
+/* ===== BOTÓN VOLVER ARRIBA (FLOATING) ===== */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #F2C200;
+    color: #1a1a2e;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.scroll-top-btn:hover {
+    transform: scale(1.1);
+    background: #e6b800;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.scroll-top-btn:active {
+    transform: scale(0.9);
+}
+
 /* ========== SCROLLBAR PERSONALIZADA ========== */
 #resultsTableWrapper::-webkit-scrollbar {
+    width: 6px;
     height: 6px;
 }
 
@@ -397,12 +423,6 @@
     .stock-header h1 {
         font-size: 1rem !important;
     }
-    
-    #paginationControlsTop {
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-    }
 
     .action-buttons-top .btn {
         font-size: 0.65rem;
@@ -415,9 +435,14 @@
         justify-content: center;
         padding-top: 10px;
     }
-    
-    .stock-page .stock-wrapper:not(.centered) {
-        padding-top: 0;
+
+    /* Botón volver arriba en móvil */
+    .scroll-top-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+        bottom: 70px;
+        right: 15px;
     }
 }
 
@@ -433,9 +458,9 @@
         justify-content: center;
         padding-top: 10px;
     }
-    
-    .stock-page .stock-wrapper:not(.centered) {
-        padding-top: 0;
+
+    #resultsTableWrapper {
+        max-height: 60vh;
     }
 }
 
@@ -449,5 +474,16 @@
     .action-buttons-top .btn {
         flex: 1;
         min-width: 100px;
+    }
+}
+
+/* ===== Botón volver arriba en pantallas grandes ===== */
+@media (min-width: 768px) {
+    .scroll-top-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 28px;
+        bottom: 90px;
+        right: 30px;
     }
 }

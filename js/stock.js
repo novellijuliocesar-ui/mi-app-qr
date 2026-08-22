@@ -406,7 +406,7 @@ class StockLoader {
     }
 }
 
-// ========== CONTROLADOR DE STOCK (SIN PAGINACIÓN) ==========
+// ========== CONTROLADOR DE STOCK (CON BOTÓN VOLVER ARRIBA) ==========
 
 class StockApp {
     constructor() {
@@ -418,6 +418,7 @@ class StockApp {
         this.cachedImage = null;
         this._ultimaOrden = null;
         this._ordenAscendente = true;
+        this.scrollThreshold = 300; // Umbral para mostrar el botón
 
         this.container = document.getElementById('stockPage');
         this.elements = {};
@@ -473,7 +474,7 @@ class StockApp {
                     </button>
                 </div>
 
-                <!-- ====== PANTALLA DE RESULTADOS (SIN PAGINACIÓN) ====== -->
+                <!-- ====== PANTALLA DE RESULTADOS ====== -->
                 <div id="resultsScreen" class="stock-card" style="display: none;">
                     <div class="stock-header" style="text-align: center; padding: 15px;">
                         <h1 style="margin: 0; font-size: 1.2rem;">📊 Resultados de Búsqueda</h1>
@@ -514,6 +515,11 @@ class StockApp {
                         </div>
                     </div>
                 </div>
+
+                <!-- ====== BOTÓN VOLVER ARRIBA (FLOATING) ====== -->
+                <button id="scrollTopBtn" class="scroll-top-btn" style="display: none;" title="Volver arriba">
+                    ⬆
+                </button>
             </div>
         `;
 
@@ -523,6 +529,7 @@ class StockApp {
             resultsSubtitle: this.container.querySelector('#resultsSubtitle'),
             resultsTableBody: this.container.querySelector('#resultsTableBody'),
             resultsTable: this.container.querySelector('#resultsTable'),
+            resultsTableWrapper: this.container.querySelector('#resultsTableWrapper'),
             searchInput: this.container.querySelector('#stockSearchInput'),
             categoryFilter: this.container.querySelector('#categoryFilter'),
             searchBtn: this.container.querySelector('#searchBtn'),
@@ -530,6 +537,7 @@ class StockApp {
             shareImageBtnTop: this.container.querySelector('#shareImageBtnTop'),
             newSearchBtnTop: this.container.querySelector('#newSearchBtnTop'),
             actionButtonsTop: this.container.querySelector('#actionButtonsTop'),
+            scrollTopBtn: this.container.querySelector('#scrollTopBtn'),
         };
     }
 
@@ -559,6 +567,46 @@ class StockApp {
                 if (th) {
                     this._ordenarPor(th.dataset.sort);
                 }
+            });
+        }
+
+        // ===== NUEVO: Evento de scroll para mostrar/ocultar el botón =====
+        if (this.elements.resultsTableWrapper) {
+            this.elements.resultsTableWrapper.addEventListener('scroll', () => this._handleScroll());
+        }
+
+        // ===== NUEVO: Botón volver arriba =====
+        if (this.elements.scrollTopBtn) {
+            this.elements.scrollTopBtn.addEventListener('click', () => this._scrollToTop());
+        }
+    }
+
+    // ===== NUEVO: Manejar el scroll =====
+    _handleScroll() {
+        const wrapper = this.elements.resultsTableWrapper;
+        const btn = this.elements.scrollTopBtn;
+        if (!wrapper || !btn) return;
+
+        // Si el scroll supera el umbral, mostrar el botón
+        if (wrapper.scrollTop > this.scrollThreshold) {
+            btn.style.display = 'flex';
+            // Pequeña animación de entrada
+            btn.style.opacity = '1';
+            btn.style.transform = 'scale(1)';
+        } else {
+            btn.style.display = 'none';
+            btn.style.opacity = '0';
+            btn.style.transform = 'scale(0.8)';
+        }
+    }
+
+    // ===== NUEVO: Volver arriba =====
+    _scrollToTop() {
+        const wrapper = this.elements.resultsTableWrapper;
+        if (wrapper) {
+            wrapper.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
         }
     }
@@ -598,6 +646,11 @@ class StockApp {
 
         this.filtrados = this.loader.buscar(termino, categoria);
         this.cachedImage = null;
+
+        // Ocultar botón volver arriba al hacer nueva búsqueda
+        if (this.elements.scrollTopBtn) {
+            this.elements.scrollTopBtn.style.display = 'none';
+        }
 
         if (this.filtrados.length === 0) {
             mostrarMensaje(`🔍 No se encontraron resultados${termino ? ` para "${termino}"` : ''}${categoria ? ` en ${categoria}` : ''}`, 'info', 3000);
@@ -808,6 +861,11 @@ class StockApp {
         // Rehabilitar swipe al volver
         if (window.navigation) {
             window.navigation.enableSwipe();
+        }
+
+        // Ocultar botón volver arriba
+        if (this.elements.scrollTopBtn) {
+            this.elements.scrollTopBtn.style.display = 'none';
         }
 
         if (this.elements.searchInput) {
