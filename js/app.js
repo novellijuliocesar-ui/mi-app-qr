@@ -199,6 +199,11 @@ class App {
         this._showLoading(true);
         this._hideCard();
 
+        // Deshabilitar swipe al mostrar QR
+        if (window.navigation) {
+            window.navigation.disableSwipe();
+        }
+
         try {
             const { id, codigo, desc } = this.currentItem;
             
@@ -221,6 +226,10 @@ class App {
             console.error('[App] Error al generar:', error);
             mostrarMensaje('❌ Error al generar la tarjeta', 'error');
             this._showSelection();
+            // Rehabilitar swipe si hay error
+            if (window.navigation) {
+                window.navigation.enableSwipe();
+            }
         } finally {
             this._showLoading(false);
         }
@@ -256,6 +265,10 @@ class App {
         } catch (error) {
             console.error('[App] Error al descargar:', error);
             mostrarMensaje('❌ Error al descargar', 'error');
+            // Rehabilitar swipe si hay error
+            if (window.navigation) {
+                window.navigation.enableSwipe();
+            }
         }
     }
 
@@ -287,6 +300,10 @@ class App {
             if (error.name !== 'AbortError') {
                 console.error('[App] Error al compartir:', error);
                 mostrarMensaje('❌ Error al compartir', 'error');
+                // Rehabilitar swipe si hay error
+                if (window.navigation) {
+                    window.navigation.enableSwipe();
+                }
             }
         }
     }
@@ -305,6 +322,11 @@ class App {
         
         this._showSelection();
         mostrarMensaje('🔄 Campos limpiados', 'info', 2000);
+
+        // Rehabilitar swipe al volver
+        if (window.navigation) {
+            window.navigation.enableSwipe();
+        }
     }
 
     _showLoading(show) {

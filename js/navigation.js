@@ -12,6 +12,7 @@ export class SwipeNavigation {
         this.startX = 0;
         this.currentX = 0;
         this.diffX = 0;
+        this.swipeEnabled = true;
 
         this._init();
     }
@@ -64,7 +65,7 @@ export class SwipeNavigation {
         // Dots click
         this.dots.forEach((dot, index) => {
             dot.addEventListener('click', () => {
-                if (!this.isAnimating) {
+                if (!this.isAnimating && this.swipeEnabled) {
                     this.goToPage(index);
                 }
             });
@@ -77,8 +78,30 @@ export class SwipeNavigation {
         });
     }
 
+    enableSwipe() {
+        this.swipeEnabled = true;
+        this.wrapper.style.cursor = 'grab';
+        this.wrapper.style.touchAction = 'pan-y';
+        console.log('[SwipeNavigation] ✅ Swipe habilitado');
+    }
+
+    disableSwipe() {
+        this.swipeEnabled = false;
+        this.wrapper.style.cursor = 'default';
+        this.wrapper.style.touchAction = 'none';
+        console.log('[SwipeNavigation] ❌ Swipe deshabilitado');
+    }
+
+    setSwipeEnabled(enabled) {
+        if (enabled) {
+            this.enableSwipe();
+        } else {
+            this.disableSwipe();
+        }
+    }
+
     _handleTouchStart(e) {
-        if (this.isAnimating) return;
+        if (!this.swipeEnabled || this.isAnimating) return;
         this.isDragging = true;
         this.startX = e.touches[0].clientX;
         this.currentX = this.startX;
@@ -88,7 +111,7 @@ export class SwipeNavigation {
     }
 
     _handleTouchMove(e) {
-        if (!this.isDragging || this.isAnimating) return;
+        if (!this.swipeEnabled || !this.isDragging || this.isAnimating) return;
         
         this.currentX = e.touches[0].clientX;
         this.diffX = this.currentX - this.startX;
@@ -101,7 +124,7 @@ export class SwipeNavigation {
     }
 
     _handleTouchEnd(e) {
-        if (!this.isDragging || this.isAnimating) {
+        if (!this.swipeEnabled || !this.isDragging || this.isAnimating) {
             this.isDragging = false;
             return;
         }
@@ -122,7 +145,7 @@ export class SwipeNavigation {
     }
 
     _handleMouseDown(e) {
-        if (this.isAnimating) return;
+        if (!this.swipeEnabled || this.isAnimating) return;
         if (e.button !== 0) return;
         
         this.isDragging = true;
@@ -135,7 +158,7 @@ export class SwipeNavigation {
     }
 
     _handleMouseMove(e) {
-        if (!this.isDragging || this.isAnimating) return;
+        if (!this.swipeEnabled || !this.isDragging || this.isAnimating) return;
         
         this.currentX = e.clientX;
         this.diffX = this.currentX - this.startX;
@@ -149,7 +172,7 @@ export class SwipeNavigation {
     }
 
     _handleMouseUp(e) {
-        if (!this.isDragging || this.isAnimating) {
+        if (!this.swipeEnabled || !this.isDragging || this.isAnimating) {
             this.isDragging = false;
             return;
         }

@@ -633,6 +633,11 @@ class StockApp {
             if (wrapper) {
                 wrapper.classList.add('centered');
             }
+
+            // Habilitar swipe si no hay resultados (no hay tabla que interactuar)
+            if (window.navigation) {
+                window.navigation.enableSwipe();
+            }
             
             this.elements.resultsScreen.style.display = 'block';
             this.elements.searchScreen.style.display = 'none';
@@ -657,6 +662,11 @@ class StockApp {
         const wrapper = this.container.querySelector('.stock-wrapper');
         if (wrapper) {
             wrapper.classList.remove('centered');
+        }
+
+        // Deshabilitar swipe al mostrar resultados
+        if (window.navigation) {
+            window.navigation.disableSwipe();
         }
 
         this.elements.searchScreen.style.display = 'none';
@@ -874,6 +884,11 @@ class StockApp {
         const wrapper = this.container.querySelector('.stock-wrapper');
         if (wrapper) {
             wrapper.classList.add('centered');
+        }
+
+        // Rehabilitar swipe al volver
+        if (window.navigation) {
+            window.navigation.enableSwipe();
         }
 
         if (this.elements.searchInput) {
