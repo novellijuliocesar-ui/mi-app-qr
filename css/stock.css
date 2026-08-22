@@ -259,6 +259,53 @@
     border-bottom: none;
 }
 
+/* ===== ESTILOS PARA SELECCIÓN MÚLTIPLE ===== */
+
+/* Checkbox personalizado */
+#resultsTableBody input[type="checkbox"] {
+    accent-color: #F2C200;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* Checkbox "Seleccionar todos" en el header */
+#selectAllCheckbox {
+    accent-color: #F2C200;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+#resultsTableBody tr {
+    transition: background 0.2s ease, border-left 0.2s ease;
+    cursor: default;
+}
+
+/* ===== BARRA DE SELECCIÓN ===== */
+#selectionBar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(26, 26, 46, 0.95) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px !important;
+    margin: 0 0 10px 0 !important;
+    padding: 8px 15px !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+#selectionCount {
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
 /* ===== BADGES ===== */
 .stock-badge {
     display: inline-block;
@@ -394,6 +441,16 @@
     .stock-table-container {
         padding: 10px;
     }
+
+    #resultsTableBody input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+    }
+
+    #selectAllCheckbox {
+        width: 14px;
+        height: 14px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -443,6 +500,31 @@
         font-size: 20px;
         bottom: 70px;
         right: 15px;
+    }
+
+    /* Barra de selección en móvil */
+    #selectionBar {
+        padding: 6px 10px !important;
+        gap: 8px;
+    }
+    
+    #selectionCount {
+        font-size: 0.75rem !important;
+    }
+    
+    #selectionBar .btn {
+        font-size: 0.65rem !important;
+        padding: 3px 10px !important;
+    }
+    
+    #resultsTableBody input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+    }
+
+    #selectAllCheckbox {
+        width: 14px;
+        height: 14px;
     }
 }
 
