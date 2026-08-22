@@ -174,10 +174,27 @@ class App {
         this._poblarSelect();
 
         const count = this.excelLoader.obtenerDatos().length;
+        
         if (term.trim() && count > 0) {
             mostrarMensaje(`🔍 ${count} resultados encontrados`, 'success');
+            
+            // ===== NUEVO: Si solo hay 1 resultado, seleccionarlo automáticamente =====
+            if (count === 1) {
+                const select = this.elements.activoSelect;
+                if (select) {
+                    // Seleccionar la única opción disponible (índice 1, porque el índice 0 es "-- Seleccionar --")
+                    select.selectedIndex = 1;
+                    // Disparar el evento change para actualizar currentItem
+                    const event = new Event('change', { bubbles: true });
+                    select.dispatchEvent(event);
+                    mostrarMensaje(`✅ Seleccionado automáticamente: ${this.currentItem?.codigo}`, 'success', 2000);
+                }
+            }
+            
         } else if (term.trim() && count === 0) {
             mostrarMensaje('🔍 No se encontraron resultados', 'info');
+            // Limpiar selección si no hay resultados
+            this.currentItem = null;
         }
     }
 
