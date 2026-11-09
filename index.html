@@ -2,46 +2,118 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#F2C200">
-    <meta name="description" content="Generador de Tarjetas QR y Búsqueda de Stock">
-    <title>QR Generator & Stock</title>
-    
-    <!-- MANIFEST -->
+    <meta name="description" content="Generador de tarjetas QR de activos y consulta de stock del almacén">
+    <title>QR & Stock</title>
     <link rel="manifest" href="./manifest.json">
-    
-    <!-- ===== CSS ===== -->
-    <link rel="stylesheet" href="./css/styles.css">
-    <link rel="stylesheet" href="./css/stock.css">
-    
-    <!-- Bibliotecas externas -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <link rel="icon" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./css/app.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
+    <script type="module" src="./js/main.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <!-- ====== INDICADOR DE PÁGINA ====== -->
-        <div class="page-indicator">
-            <span class="dot active" data-page="0"></span>
-            <span class="dot" data-page="1"></span>
-        </div>
+    <main class="pages" id="pages">
+        <!-- ================= PÁGINA 1: TARJETAS QR ================= -->
+        <section class="page" id="qrPage" aria-label="Tarjetas QR">
+            <div class="page-inner">
+                <header class="hero">
+                    <h1>Tarjetas QR</h1>
+                    <p class="hero-sub" id="qrDataInfo">Cargando activos…</p>
+                </header>
 
-        <!-- ====== CONTENEDOR DE PÁGINAS (SWIPE) ====== -->
-        <div class="pages-wrapper" id="pagesWrapper">
-            <!-- Página 1: Generador QR -->
-            <div id="qrPage" class="page qr-page"></div>
+                <!-- Búsqueda -->
+                <div id="qrSearchView">
+                    <div class="search-box">
+                        <span class="search-icon" aria-hidden="true">🔍</span>
+                        <input type="search" id="qrSearch" placeholder="ID, código o descripción…"
+                               autocomplete="off" enterkeyhint="search" aria-label="Buscar activo">
+                        <button class="clear-btn" id="qrSearchClear" aria-label="Borrar búsqueda" hidden>✕</button>
+                    </div>
+                    <p class="result-count" id="qrCount"></p>
+                    <ul class="item-list" id="qrList" aria-live="polite"></ul>
+                    <button class="btn btn-ghost" id="qrMore" hidden>Mostrar más</button>
+                </div>
 
-            <!-- Página 2: Búsqueda de Stock -->
-            <div id="stockPage" class="page stock-page"></div>
-        </div>
+                <!-- Tarjeta generada -->
+                <div id="qrCardView" hidden>
+                    <div class="card-preview">
+                        <img id="qrCardImg" alt="Tarjeta QR generada">
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-primary" id="qrShare">📤 Compartir</button>
+                        <button class="btn btn-dark" id="qrDownload">📥 Descargar</button>
+                        <button class="btn btn-ghost" id="qrBack">← Volver a la búsqueda</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PÁGINA 2: STOCK ================= -->
+        <section class="page" id="stockPage" aria-label="Stock">
+            <div class="page-inner">
+                <header class="hero">
+                    <h1>Stock de repuestos</h1>
+                    <p class="hero-sub" id="stockDataInfo">Cargando almacén…</p>
+                </header>
+
+                <div class="search-box">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" id="stockSearch" placeholder="Referencia, descripción, ubicación…"
+                           autocomplete="off" enterkeyhint="search" aria-label="Buscar repuesto">
+                    <button class="clear-btn" id="stockSearchClear" aria-label="Borrar búsqueda" hidden>✕</button>
+                </div>
+
+                <div class="filters">
+                    <select id="stockCategory" aria-label="Clasificación">
+                        <option value="">Todas las clasificaciones</option>
+                    </select>
+                    <select id="stockSort" aria-label="Ordenar">
+                        <option value="relevancia">Orden: relevancia</option>
+                        <option value="ubicacion">Orden: ubicación</option>
+                        <option value="referencia">Orden: referencia</option>
+                        <option value="cantidad">Orden: menos cantidad</option>
+                        <option value="criticidad">Orden: criticidad</option>
+                    </select>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="stockOnlyCritical"> Solo criticidad A
+                </label>
+
+                <div class="toolbar" id="stockToolbar" hidden>
+                    <p class="result-count" id="stockCount"></p>
+                    <button class="btn-chip" id="stockSelectMode">☑ Seleccionar</button>
+                </div>
+
+                <ul class="item-list" id="stockList" aria-live="polite"></ul>
+                <button class="btn btn-ghost" id="stockMore" hidden>Mostrar más</button>
+                <div class="empty" id="stockEmpty">
+                    <p>Escribe para buscar en el almacén.</p>
+                    <p class="hint">Puedes combinar palabras: <b>rodamiento 6201</b>, o buscar una ubicación: <b>S1/A13</b></p>
+                </div>
+            </div>
+
+            <!-- Barra de exportación (aparece con resultados) -->
+            <div class="export-bar" id="stockExportBar" hidden>
+                <span id="stockExportLabel">Todos</span>
+                <button class="btn-chip" id="stockShareText">📝 Texto</button>
+                <button class="btn-chip" id="stockShareImg">🖼️ Imagen</button>
+                <button class="btn-chip" id="stockDownloadImg" aria-label="Descargar imagen">📥</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Navegación inferior -->
+    <nav class="tabbar" aria-label="Secciones">
+        <button class="tab active" data-page="0" aria-current="page"><span>▦</span>QR</button>
+        <button class="tab" data-page="1"><span>📦</span>Stock</button>
+    </nav>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <div id="updateBanner" class="update-banner" hidden>
+        Hay una nueva versión <button id="updateBtn">Actualizar</button>
     </div>
-
-    <!-- ====== CONTENEDOR DE MENSAJES FLOTANTES ====== -->
-    <div id="toastContainer"></div>
-
-    <!-- ====== SCRIPTS ====== -->
-    <script type="module" src="./js/navigation.js"></script>
-    <script type="module" src="./js/app.js"></script>
-    <script type="module" src="./js/stock.js"></script>
 </body>
 </html>
