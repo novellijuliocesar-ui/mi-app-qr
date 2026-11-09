@@ -99,9 +99,7 @@ export function dibujarListado(items, { titulo, subtitulo, max = 150 }) {
     const cols = [
         { t: 'Ubicación', x: 24, w: 170, mono: true, v: it => it.ubicacion },
         { t: 'Ref.', x: 200, w: 70, mono: true, bold: true, v: it => it.referencia },
-        { t: 'Descripción', x: 276, w: 440, v: it => it.descripcion },
-        { t: 'Cant.', x: 724, w: 80, right: true, bold: true, v: it => fmtCantidad(it) },
-        { t: 'Crit.', x: 820, w: 56, center: true, v: it => it.criticidad },
+        { t: 'Descripción', x: 276, w: 600, v: it => it.descripcion },
     ];
     const H = 96 + 34 + filas.length * altoFila + (sobran > 0 ? 34 : 0) + 40;
 
@@ -144,7 +142,7 @@ export function dibujarListado(items, { titulo, subtitulo, max = 150 }) {
         for (const c of cols) {
             const valor = c.v(it) || '—';
             ctx.font = `${c.bold ? 'bold ' : ''}13px ${c.mono ? MONO : FUENTE}`;
-            ctx.fillStyle = c.t === 'Crit.' ? colorCriticidad(valor) : c.t === 'Cant.' && it.cantidad === 0 ? '#c62828' : '#222';
+            ctx.fillStyle = '#222';
             ctx.textAlign = c.right ? 'right' : c.center ? 'center' : 'left';
             const x = c.right ? c.x + c.w : c.center ? c.x + c.w / 2 : c.x;
             ctx.fillText(recortar(ctx, valor, c.w), x, y + altoFila / 2);
@@ -163,13 +161,4 @@ export function dibujarListado(items, { titulo, subtitulo, max = 150 }) {
     ctx.font = `12px ${FUENTE}`;
     ctx.fillText(`Generado el ${new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}`, W / 2, y + 20);
     return canvas;
-}
-
-export function fmtCantidad(it) {
-    if (it.cantidad == null || Number.isNaN(it.cantidad)) return '—';
-    return `${it.cantidad.toLocaleString('es-ES')} ${it.unidad}`;
-}
-
-function colorCriticidad(c) {
-    return { A: '#c62828', B: '#b26a00', C: '#2e7d32' }[c] || '#222';
 }

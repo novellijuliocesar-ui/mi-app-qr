@@ -31,6 +31,18 @@ if (new URLSearchParams(location.search).has('ref') || location.hash === '#stock
 }
 marcarPestana(0);
 
+// ---------- Tema claro / oscuro ----------
+// Por defecto sigue el tema del sistema; el botón 🌓 lo cambia y la elección se recuerda.
+const oscuroSistema = matchMedia('(prefers-color-scheme: dark)');
+function temaActual() {
+    return document.documentElement.dataset.theme || (oscuroSistema.matches ? 'dark' : 'light');
+}
+document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('click', () => {
+    const nuevo = temaActual() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nuevo;
+    try { localStorage.setItem('tema', nuevo); } catch { /* sin almacenamiento: dura hasta cerrar */ }
+}));
+
 // ---------- Datos ----------
 const qr = new QrPage();
 const stock = new StockPage();

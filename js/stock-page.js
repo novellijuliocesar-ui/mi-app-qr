@@ -1,14 +1,12 @@
 // Página 2: búsqueda de repuestos en el almacén.
-import { cargarStock, buscar, ordenCriticidad } from './data.js';
-import { dibujarListado, fmtCantidad } from './render.js';
+import { cargarStock, buscar } from './data.js';
+import { dibujarListado } from './render.js';
 import { $, toast, escapeHtml, debounce, ListaPaginada, canvasABlob, descargar, compartirArchivo, compartirTexto } from './ui.js';
 
 const ORDENES = {
     relevancia: null,
     ubicacion: (a, b) => a.ubicacion.localeCompare(b.ubicacion, 'es', { numeric: true }),
     referencia: (a, b) => a.referencia.localeCompare(b.referencia, 'es', { numeric: true }),
-    cantidad: (a, b) => (a.cantidad ?? Infinity) - (b.cantidad ?? Infinity),
-    criticidad: (a, b) => ordenCriticidad(a.criticidad) - ordenCriticidad(b.criticidad),
 };
 
 export class StockPage {
@@ -24,7 +22,6 @@ export class StockPage {
             clear: $('#stockSearchClear'),
             categoria: $('#stockCategory'),
             orden: $('#stockSort'),
-            critica: $('#stockOnlyCritical'),
             toolbar: $('#stockToolbar'),
             count: $('#stockCount'),
             selectMode: $('#stockSelectMode'),
@@ -50,7 +47,7 @@ export class StockPage {
             this.buscar();
             this.el.search.focus();
         });
-        for (const ctrl of [this.el.categoria, this.el.orden, this.el.critica]) {
+        for (const ctrl of [this.el.categoria, this.el.orden]) {
             ctrl.addEventListener('change', () => this.buscar());
         }
         this.el.selectMode.addEventListener('click', () => this.alternarModoSeleccion());
@@ -91,19 +88,18 @@ export class StockPage {
     }
 
     get hayFiltro() {
-        return this.el.search.value.trim() || this.el.categoria.value || this.el.critica.checked;
+        return this.el.search.value.trim() || this.el.categoria.value;
     }
 
     buscar() {
         const q = this.el.search.value.trim();
         const cat = this.el.categoria.value;
-        const soloA = this.el.critica.checked;
 
         if (!this.hayFiltro) {
             this.resultados = [];
         } else {
             this.resultados = buscar(this.items, q,
-                it => (!cat || it.clasificacion === cat) && (!soloA || it.criticidad === 'A'));
+                it => !cat || it.clasificacion === cat);
             const orden = ORDENES[this.el.orden.value];
             if (orden) this.resultados.sort(orden);
         }
@@ -118,15 +114,12 @@ export class StockPage {
 
     renderItem(it, i) {
         const sel = this.seleccion.has(it);
-        const sinStock = it.cantidad === 0;
         return `
             <li class="stock-item${sel ? ' selected' : ''}${this.modoSeleccion ? ' selecting' : ''}" data-i="${i}">
                 <span class="check" aria-hidden="true">${sel ? '✓' : ''}</span>
                 <div class="stock-main">
                     <div class="item-top">
                         <button class="copy mono" title="Copiar referencia">${escapeHtml(it.referencia || '—')}</button>
-                        ${it.criticidad ? `<span class="crit crit-${escapeHtml(it.criticidad)}" title="Criticidad">${escapeHtml(it.criticidad)}</span>` : ''}
-                        <span class="qty${sinStock ? ' zero' : ''}">${escapeHtml(fmtCantidad(it))}</span>
                     </div>
                     <div class="item-desc">${escapeHtml(it.descripcion || '—')}</div>
                     <div class="item-meta">
@@ -140,9 +133,8 @@ export class StockPage {
 
     actualizarContadores() {
         const n = this.resultados.length;
-        const unidades = this.resultados.reduce((s, it) => s + (it.cantidad || 0), 0);
         this.el.count.textContent = n
-            ? `${n.toLocaleString('es-ES')} resultado${n === 1 ? '' : 's'} · ${unidades.toLocaleString('es-ES')} uds. en total`
+            ? `${n.toLocaleString('es-ES')} resultado${n === 1 ? '' : 's'}`
             : 'Sin resultados';
         this.el.selectMode.textContent = this.modoSeleccion ? '✕ Cancelar' : '☑ Seleccionar';
         this.el.selectMode.hidden = n === 0;
@@ -189,14 +181,13 @@ export class StockPage {
         const partes = [];
         if (this.el.search.value.trim()) partes.push(`"${this.el.search.value.trim()}"`);
         if (this.el.categoria.value) partes.push(this.el.categoria.value);
-        if (this.el.critica.checked) partes.push('criticidad A');
         return partes.join(' · ');
     }
 
     async compartirTexto() {
         const items = this.aExportar;
         const lineas = items.slice(0, 100).map(it =>
-            `• ${it.referencia} — ${it.descripcion}\n  📍 ${it.ubicacion} · ${fmtCantidad(it)}${it.criticidad ? ` · Crit. ${it.criticidad}` : ''}`);
+            `• ${it.referencia} — ${it.descripcion}\n  📍 ${it.ubicacion}`);
         if (items.length > 100) lineas.push(`… y ${items.length - 100} más`);
         const texto = `📦 Stock${this.descripcionBusqueda ? ` (${this.descripcionBusqueda})` : ''}: ${items.length} resultado(s)\n\n${lineas.join('\n')}`;
         try {

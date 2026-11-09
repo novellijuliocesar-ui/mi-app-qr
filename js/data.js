@@ -54,7 +54,6 @@ export async function cargarActivos() {
 }
 
 // ---------- Stock ----------
-const ORDEN_CRITICIDAD = { A: 0, B: 1, C: 2 };
 
 export async function cargarStock() {
     const { registros, modificado } = await leerExcel(ARCHIVOS.stock, ['Ubicación', 'Referencia']);
@@ -66,9 +65,6 @@ export async function cargarStock() {
             refFabricante: texto(r['referencia fabricante']),
             descripcion: texto(r['descripcion']),
             clasificacion: texto(r['clasificacion']),
-            criticidad: texto(r['criticidad']).toUpperCase(),
-            cantidad: r['cantidad'] === '' ? null : Number(r['cantidad']),
-            unidad: texto(r['tipo unidad']).toLowerCase().replace(/\.$/, '') || 'ud',
             modificado: texto(r['ult modific']),
         }))
         .filter(it => it.referencia || it.descripcion);
@@ -88,10 +84,6 @@ export async function cargarStock() {
         ultimaFecha: ultima ? ultima.split('-').reverse().join('/') : null,
         modificado,
     };
-}
-
-export function ordenCriticidad(c) {
-    return ORDEN_CRITICIDAD[c] ?? 9;
 }
 
 // ---------- Búsqueda ----------

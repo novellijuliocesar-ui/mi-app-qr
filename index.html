@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#F2C200">
+    <meta name="color-scheme" content="light dark">
+    <script>
+        // Aplica el tema guardado antes de pintar, para evitar un parpadeo.
+        try { const t = localStorage.getItem('tema'); if (t) document.documentElement.dataset.theme = t; } catch {}
+    </script>
     <meta name="description" content="Generador de tarjetas QR de activos y consulta de stock del almacén">
     <title>QR & Stock</title>
     <link rel="manifest" href="./manifest.json">
@@ -20,6 +25,7 @@
         <section class="page" id="qrPage" aria-label="Tarjetas QR">
             <div class="page-inner">
                 <header class="hero">
+                    <button class="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">🌓</button>
                     <h1>Tarjetas QR</h1>
                     <p class="hero-sub" id="qrDataInfo">Cargando activos…</p>
                 </header>
@@ -55,6 +61,7 @@
         <section class="page" id="stockPage" aria-label="Stock">
             <div class="page-inner">
                 <header class="hero">
+                    <button class="theme-btn" aria-label="Cambiar tema" title="Cambiar tema">🌓</button>
                     <h1>Stock de repuestos</h1>
                     <p class="hero-sub" id="stockDataInfo">Cargando almacén…</p>
                 </header>
@@ -74,13 +81,8 @@
                         <option value="relevancia">Orden: relevancia</option>
                         <option value="ubicacion">Orden: ubicación</option>
                         <option value="referencia">Orden: referencia</option>
-                        <option value="cantidad">Orden: menos cantidad</option>
-                        <option value="criticidad">Orden: criticidad</option>
                     </select>
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="stockOnlyCritical"> Solo criticidad A
-                </label>
 
                 <div class="toolbar" id="stockToolbar" hidden>
                     <p class="result-count" id="stockCount"></p>
