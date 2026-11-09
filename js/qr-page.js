@@ -78,10 +78,11 @@ export class QrPage {
 
     buscar() {
         const q = this.el.search.value.trim();
-        this.resultados = q ? buscar(this.activos, q) : this.activos;
+        // Sin texto no se lista nada: los activos aparecen a medida que se escribe.
+        this.resultados = q ? buscar(this.activos, q) : [];
         this.el.count.textContent = q
             ? (this.resultados.length ? `${this.resultados.length} resultado${this.resultados.length === 1 ? '' : 's'}` : 'Sin resultados')
-            : 'Toca un activo para generar su tarjeta';
+            : 'Escribe un ID, código o descripción para buscar';
         this.lista.mostrar(this.resultados);
     }
 
