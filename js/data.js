@@ -70,6 +70,20 @@ export async function cargarStock() {
         }))
         .filter(it => it.referencia || it.descripcion);
 
+    // Una misma referencia puede estar en varias ubicaciones: cada registro conoce las demás.
+    const porReferencia = new Map();
+    for (const it of items) {
+        if (!it.referencia) continue;
+        if (!porReferencia.has(it.referencia)) porReferencia.set(it.referencia, []);
+        porReferencia.get(it.referencia).push(it);
+    }
+    for (const it of items) {
+        const otras = (porReferencia.get(it.referencia) || [])
+            .filter(o => o !== it && o.ubicacion && o.ubicacion !== it.ubicacion)
+            .map(o => o.ubicacion);
+        Object.defineProperty(it, 'otrasUbicaciones', { value: [...new Set(otras)] });
+    }
+
     // Fecha del último movimiento registrado en el propio Excel (dd/mm/aaaa).
     const ultima = items.reduce((max, it) => {
         const m = it.modificado.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);

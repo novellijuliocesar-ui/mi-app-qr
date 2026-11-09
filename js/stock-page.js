@@ -61,6 +61,8 @@ export class StockPage {
             if (!fila) return;
             if (e.target.closest('.copy')) {
                 this.copiarReferencia(this.resultados[+fila.dataset.i]);
+            } else if (e.target.closest('.otras') && !this.modoSeleccion) {
+                this.verTodasUbicaciones(this.resultados[+fila.dataset.i]);
             } else if (this.modoSeleccion) {
                 this.alternarSeleccion(+fila.dataset.i, fila);
             }
@@ -134,8 +136,32 @@ export class StockPage {
                         ${it.refFabricante ? `<span>Fab: ${escapeHtml(it.refFabricante)}</span>` : ''}
                         ${it.clasificacion ? `<span>${escapeHtml(it.clasificacion)}</span>` : ''}
                     </div>
+                    ${this.renderOtras(it)}
                 </div>
             </li>`;
+    }
+
+    /** Línea «También en…» con las otras ubicaciones de la misma referencia. */
+    renderOtras(it) {
+        const otras = it.otrasUbicaciones;
+        if (!otras?.length) return '';
+        // Si ya se está buscando esta referencia, todas sus ubicaciones están en pantalla.
+        if (this.el.search.value.trim().toUpperCase() === it.referencia.toUpperCase()) return '';
+        const visibles = otras.slice(0, 3).map(u => `<span class="mono">${escapeHtml(u)}</span>`).join(', ');
+        const resto = otras.length > 3 ? ` y ${otras.length - 3} más` : '';
+        return `<button class="otras" title="Ver todas las ubicaciones de esta referencia">
+                    📍 También en ${visibles}${resto} <span class="otras-ver">Ver todas ›</span>
+                </button>`;
+    }
+
+    /** Busca la referencia para ver juntas todas sus ubicaciones. */
+    verTodasUbicaciones(it) {
+        this.el.search.value = it.referencia;
+        this.el.clear.hidden = false;
+        this.el.categoria.value = '';
+        this.el.orden.value = 'relevancia';   // las coincidencias exactas de la referencia salen primero
+        this.buscar();
+        document.getElementById('stockPage').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     actualizarContadores() {
@@ -210,7 +236,8 @@ export class StockPage {
     async compartirTexto() {
         const items = this.aExportar;
         const lineas = items.slice(0, 100).map(it =>
-            `• ${it.referencia} — ${it.descripcion}\n  📍 ${it.ubicacion}`);
+            `• ${it.referencia} — ${it.descripcion}\n  📍 ${it.ubicacion}`
+            + (it.otrasUbicaciones?.length ? `\n  También en: ${it.otrasUbicaciones.join(', ')}` : ''));
         if (items.length > 100) lineas.push(`… y ${items.length - 100} más`);
         const texto = `📦 Stock${this.descripcionBusqueda ? ` (${this.descripcionBusqueda})` : ''}: ${items.length} resultado(s)\n\n${lineas.join('\n')}`;
         try {

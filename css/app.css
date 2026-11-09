@@ -203,6 +203,14 @@ body.has-export-bar .page#stockPage { padding-bottom: calc(var(--tabbar) + var(-
     display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px;
     font-size: 0.78rem; color: var(--texto-2);
 }
+.otras {
+    display: block; width: 100%; text-align: left; margin-top: 8px; padding: 6px 10px;
+    border-radius: 10px; background: var(--amarillo-suave); color: var(--texto);
+    font-size: 0.78rem; line-height: 1.4;
+}
+.otras .mono { font-weight: 600; }
+.otras-ver { white-space: nowrap; font-weight: 700; color: var(--texto-fuerte); margin-left: 4px; }
+.stock-item.selected .otras { background: var(--tarjeta); }
 .loc { color: var(--texto-fuerte); font-weight: 600; }
 
 /* ================= Botones ================= */
