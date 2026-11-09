@@ -21,9 +21,13 @@ function marcarPestana(indice) {
 }
 
 tabs.forEach((t, i) => t.addEventListener('click', () => irA(i)));
+let paginaActual = 0;
 pages.addEventListener('scroll', () => {
-    marcarPestana(Math.round(pages.scrollLeft / pages.clientWidth));
+    paginaActual = Math.round(pages.scrollLeft / pages.clientWidth);
+    marcarPestana(paginaActual);
 }, { passive: true });
+// Al girar el móvil o cambiar el tamaño, se queda en la misma página.
+window.addEventListener('resize', () => irA(paginaActual, false));
 
 // Abrir directamente en stock con ?ref=… o #stock
 if (new URLSearchParams(location.search).has('ref') || location.hash === '#stock') {

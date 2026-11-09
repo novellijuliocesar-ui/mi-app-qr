@@ -7,7 +7,7 @@ export function normalizar(texto) {
     return String(texto ?? '')
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
 }
@@ -40,6 +40,23 @@ export function toast(texto, tipo = 'info', ms = 2500) {
     el.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { el.hidden = true; }, ms);
+}
+
+// ---------- Botón «atrás» del móvil ----------
+// Las vistas que se abren encima (tarjeta QR, modo selección) se registran aquí para que
+// el botón o gesto «atrás» del móvil las cierre en lugar de salir de la app.
+const capas = [];
+window.addEventListener('popstate', () => capas.pop()?.());
+
+/** Registra una vista abierta; `cerrar` se ejecutará al pulsar «atrás». */
+export function abrirCapa(cerrar) {
+    history.pushState({ capa: capas.length + 1 }, '');
+    capas.push(cerrar);
+}
+
+/** Cierra la vista abierta más reciente (igual que pulsar «atrás»). */
+export function cerrarCapa() {
+    if (capas.length) history.back();
 }
 
 // ---------- Compartir / descargar ----------
@@ -132,6 +149,10 @@ export class ListaPaginada {
         this.items = [];
         this.mostrados = 0;
         moreBtn.addEventListener('click', () => this._pintarMas());
+        // Carga el siguiente bloque sola al acercarse al final de la lista.
+        new IntersectionObserver(entradas => {
+            if (entradas[0].isIntersecting && !moreBtn.hidden) this._pintarMas();
+        }, { rootMargin: '400px' }).observe(moreBtn);
     }
 
     mostrar(items) {

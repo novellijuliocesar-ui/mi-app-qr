@@ -1,7 +1,7 @@
 // Página 2: búsqueda de repuestos en el almacén.
 import { cargarStock, buscar } from './data.js';
 import { dibujarListado } from './render.js';
-import { $, toast, escapeHtml, debounce, ListaPaginada, canvasABlob, descargar, compartirArchivo, compartirTexto } from './ui.js';
+import { $, toast, escapeHtml, debounce, ListaPaginada, canvasABlob, descargar, compartirArchivo, compartirTexto, abrirCapa, cerrarCapa } from './ui.js';
 
 const ORDENES = {
     relevancia: null,
@@ -25,6 +25,7 @@ export class StockPage {
             toolbar: $('#stockToolbar'),
             count: $('#stockCount'),
             selectMode: $('#stockSelectMode'),
+            selectAll: $('#stockSelectAll'),
             list: $('#stockList'),
             empty: $('#stockEmpty'),
             exportBar: $('#stockExportBar'),
@@ -50,7 +51,11 @@ export class StockPage {
         for (const ctrl of [this.el.categoria, this.el.orden]) {
             ctrl.addEventListener('change', () => this.buscar());
         }
-        this.el.selectMode.addEventListener('click', () => this.alternarModoSeleccion());
+        this.el.selectMode.addEventListener('click', () => {
+            if (this.modoSeleccion) cerrarCapa();
+            else this.entrarModoSeleccion();
+        });
+        this.el.selectAll.addEventListener('click', () => this.seleccionarTodos());
         this.el.list.addEventListener('click', e => {
             const fila = e.target.closest('[data-i]');
             if (!fila) return;
@@ -67,10 +72,11 @@ export class StockPage {
 
     async cargar() {
         try {
-            const { items, categorias, ultimaFecha } = await cargarStock();
+            const { items, categorias, ultimaFecha, copiaGuardada } = await cargarStock();
             this.items = items;
             this.el.info.textContent = `${items.length.toLocaleString('es-ES')} ubicaciones`
-                + (ultimaFecha ? ` · última modificación ${ultimaFecha}` : '');
+                + (ultimaFecha ? ` · última modificación ${ultimaFecha}` : '')
+                + (copiaGuardada ? ' · sin conexión (copia guardada)' : '');
             this.el.categoria.insertAdjacentHTML('beforeend',
                 categorias.map(c => `<option>${escapeHtml(c)}</option>`).join(''));
             const ref = new URLSearchParams(location.search).get('ref');
@@ -104,8 +110,9 @@ export class StockPage {
             if (orden) this.resultados.sort(orden);
         }
 
-        this.seleccion.clear();
-        this.modoSeleccion = false;
+        // La selección se conserva al reordenar o filtrar (solo lo que sigue en los resultados).
+        const visibles = new Set(this.resultados);
+        for (const it of this.seleccion) if (!visibles.has(it)) this.seleccion.delete(it);
         this.el.empty.hidden = !!this.hayFiltro;
         this.el.toolbar.hidden = !this.hayFiltro;
         this.lista.mostrar(this.resultados);
@@ -138,6 +145,8 @@ export class StockPage {
             : 'Sin resultados';
         this.el.selectMode.textContent = this.modoSeleccion ? '✕ Cancelar' : '☑ Seleccionar';
         this.el.selectMode.hidden = n === 0;
+        this.el.selectAll.hidden = !this.modoSeleccion || n === 0;
+        this.el.selectAll.textContent = this.seleccion.size === n ? 'Ninguno' : 'Todos';
         this.el.exportBar.hidden = n === 0;
         this.el.exportLabel.textContent = this.seleccion.size
             ? `${this.seleccion.size} seleccionado${this.seleccion.size === 1 ? '' : 's'}`
@@ -145,9 +154,23 @@ export class StockPage {
         document.body.classList.toggle('has-export-bar', n > 0);
     }
 
-    alternarModoSeleccion() {
-        this.modoSeleccion = !this.modoSeleccion;
-        if (!this.modoSeleccion) this.seleccion.clear();
+    entrarModoSeleccion() {
+        this.modoSeleccion = true;
+        abrirCapa(() => this.salirModoSeleccion());   // «atrás» del móvil cancela la selección
+        this.lista.refrescar();
+        this.actualizarContadores();
+    }
+
+    salirModoSeleccion() {
+        this.modoSeleccion = false;
+        this.seleccion.clear();
+        this.lista.refrescar();
+        this.actualizarContadores();
+    }
+
+    seleccionarTodos() {
+        if (this.seleccion.size === this.resultados.length) this.seleccion.clear();
+        else this.resultados.forEach(it => this.seleccion.add(it));
         this.lista.refrescar();
         this.actualizarContadores();
     }

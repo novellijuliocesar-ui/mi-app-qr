@@ -15,7 +15,7 @@
     <link rel="icon" href="./icons/icon-192.png">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="stylesheet" href="./css/app.css">
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.mini.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js" defer></script>
     <script type="module" src="./js/main.js"></script>
 </head>
@@ -78,7 +78,7 @@
 
                 <div class="filters">
                     <select id="stockCategory" aria-label="Clasificación">
-                        <option value="">Todas las clasificaciones</option>
+                        <option value="">Clasif.: todas</option>
                     </select>
                     <select id="stockSort" aria-label="Ordenar">
                         <option value="relevancia">Orden: relevancia</option>
@@ -89,6 +89,7 @@
 
                 <div class="toolbar" id="stockToolbar" hidden>
                     <p class="result-count" id="stockCount"></p>
+                    <button class="btn-chip" id="stockSelectAll" hidden>Todos</button>
                     <button class="btn-chip" id="stockSelectMode">☑ Seleccionar</button>
                 </div>
 

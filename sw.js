@@ -1,11 +1,13 @@
-// Service worker: permite abrir la app sin conexión.
-// - App (HTML, CSS, JS, librerías): se sirve desde caché y se actualiza al publicar una versión nueva.
-// - Excel: siempre se intenta descargar el más reciente; sin conexión se usa la última copia guardada.
-// Al cambiar cualquier archivo de la app, sube VERSION para que los móviles reciban la actualización.
+// Service worker: permite abrir la app sin conexión y con mala cobertura.
+// - App (HTML, CSS, JS, librerías): se abre al instante desde la copia guardada y, a la vez,
+//   se descarga la versión más reciente para la próxima vez.
+// - Excel: se intenta descargar el más reciente; si no hay red o tarda más de unos segundos,
+//   se usa la última copia guardada (la app avisa con "copia guardada").
 
-const VERSION = 'v9';
+const VERSION = 'v10';
 const CACHE_APP = `qr-stock-app-${VERSION}`;
 const CACHE_DATOS = 'qr-stock-datos';
+const ESPERA_EXCEL_MS = 4000;
 
 const APP = [
     './',
@@ -20,12 +22,19 @@ const APP = [
     './js/stock-page.js',
     './icons/icon-192.png',
     './icons/icon-512.png',
-    'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js',
+];
+const LIBRERIAS = [
+    'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.mini.min.js',
     'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
 ];
 
 self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE_APP).then(c => c.addAll(APP)));
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_APP);
+        await cache.addAll(APP);
+        // Las librerías externas se guardan por separado: si una falla, la app se instala igual.
+        await Promise.allSettled(LIBRERIAS.map(url => cache.add(url)));
+    })());
 });
 
 self.addEventListener('activate', event => {
@@ -48,32 +57,45 @@ self.addEventListener('fetch', event => {
     const url = new URL(request.url);
 
     if (url.pathname.endsWith('.xlsx')) {
-        event.respondWith(redPrimero(request));
-    } else {
-        event.respondWith(cachePrimero(request));
+        event.respondWith(excel(event, request));
+    } else if (url.origin === self.location.origin || LIBRERIAS.includes(request.url)) {
+        event.respondWith(copiaYActualiza(event, request));
     }
 });
 
-async function redPrimero(request) {
+/** Excel: red primero, con límite de espera; si falla, la copia guardada marcada como tal. */
+async function excel(event, request) {
     const cache = await caches.open(CACHE_DATOS);
-    try {
-        const resp = await fetch(request);
+    const deRed = fetch(request).then(async resp => {
         if (resp.ok) await cache.put(request, resp.clone());
         return resp;
-    } catch {
-        const guardada = await cache.match(request, { ignoreSearch: true });
-        if (guardada) return guardada;
-        throw new Error('Sin conexión y sin copia guardada');
-    }
+    });
+
+    const guardada = await cache.match(request, { ignoreSearch: true });
+    if (!guardada) return deRed;     // primera vez: hay que esperar a la red
+    event.waitUntil(deRed.catch(() => {}));   // que termine de actualizarse aunque se use la copia
+
+    const limite = new Promise(resolve => setTimeout(resolve, ESPERA_EXCEL_MS, null));
+    const resp = await Promise.race([deRed.catch(() => null), limite]);
+    if (resp && resp.ok) return resp;
+
+    // Sin red o demasiado lenta: copia guardada (la red sigue actualizándola en segundo plano).
+    const cabeceras = new Headers(guardada.headers);
+    cabeceras.set('X-Copia-Guardada', '1');
+    return new Response(await guardada.blob(), { status: 200, headers: cabeceras });
 }
 
-async function cachePrimero(request) {
-    const guardada = await caches.match(request, { ignoreSearch: true });
-    if (guardada) return guardada;
-    const resp = await fetch(request);
-    if (resp.ok && new URL(request.url).origin === self.location.origin) {
-        const cache = await caches.open(CACHE_APP);
-        await cache.put(request, resp.clone());
+/** App: responde con la copia guardada al instante y la actualiza en segundo plano. */
+async function copiaYActualiza(event, request) {
+    const cache = await caches.open(CACHE_APP);
+    const guardada = await cache.match(request, { ignoreSearch: true });
+    const deRed = fetch(request).then(async resp => {
+        if (resp.ok) await cache.put(request, resp.clone());
+        return resp;
+    });
+    if (guardada) {
+        event.waitUntil(deRed.catch(() => {}));
+        return guardada;
     }
-    return resp;
+    return deRed;
 }

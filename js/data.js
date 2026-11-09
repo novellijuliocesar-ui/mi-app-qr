@@ -33,14 +33,15 @@ async function leerExcel(ruta, columnasClave) {
         .filter(f => f.some(c => c !== ''))
         .map(f => Object.fromEntries(cabeceras.map((c, i) => [c, f[i]])));
 
-    return { registros, modificado: resp.headers.get('last-modified') };
+    // El service worker marca la respuesta cuando no hay red y usa la última copia guardada.
+    return { registros, copiaGuardada: resp.headers.get('X-Copia-Guardada') === '1' };
 }
 
 const texto = v => String(v ?? '').replace(/\s+/g, ' ').trim();
 
 // ---------- Activos (tarjetas QR) ----------
 export async function cargarActivos() {
-    const { registros, modificado } = await leerExcel(ARCHIVOS.activos,
+    const { registros, copiaGuardada } = await leerExcel(ARCHIVOS.activos,
         ['ID_ACTIVO_ARBOL', 'CODIGO_IDENTIFICATIVO']);
 
     const items = registros
@@ -50,13 +51,13 @@ export async function cargarActivos() {
             codigo: texto(r['codigo identificativo']),
             desc: texto(r['descripcion']) || 'Sin descripción',
         }));
-    return { items: indexar(items, it => [it.id, it.codigo, it.desc]), modificado };
+    return { items: indexar(items, it => [it.id, it.codigo, it.desc]), copiaGuardada };
 }
 
 // ---------- Stock ----------
 
 export async function cargarStock() {
-    const { registros, modificado } = await leerExcel(ARCHIVOS.stock, ['Ubicación', 'Referencia']);
+    const { registros, copiaGuardada } = await leerExcel(ARCHIVOS.stock, ['Ubicación', 'Referencia']);
 
     const items = registros
         .map(r => ({
@@ -82,7 +83,7 @@ export async function cargarStock() {
         items: indexar(items, it => [it.referencia, it.refFabricante, it.descripcion, it.ubicacion, it.clasificacion]),
         categorias,
         ultimaFecha: ultima ? ultima.split('-').reverse().join('/') : null,
-        modificado,
+        copiaGuardada,
     };
 }
 

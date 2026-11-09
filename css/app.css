@@ -151,7 +151,8 @@ body.has-export-bar .page#stockPage { padding-bottom: calc(var(--tabbar) + var(-
 }
 .all-select:focus { outline: none; border-color: var(--amarillo); box-shadow: 0 0 0 3px rgba(242, 194, 0, 0.25); }
 .result-count { font-size: 0.85rem; color: var(--texto-2); margin: 12px 2px 8px; }
-.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.toolbar { display: flex; align-items: center; gap: 8px; }
+.toolbar .result-count { flex: 1; }
 .error { color: var(--rojo); }
 
 .empty { text-align: center; color: var(--texto-2); padding: 40px 12px; line-height: 1.6; }

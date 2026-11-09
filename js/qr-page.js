@@ -1,7 +1,7 @@
 // Página 1: buscar un activo y generar su tarjeta QR.
 import { cargarActivos, buscar } from './data.js';
 import { dibujarTarjeta } from './render.js';
-import { $, toast, escapeHtml, debounce, ListaPaginada, canvasABlob, descargar, compartirArchivo, nombreArchivo } from './ui.js';
+import { $, toast, escapeHtml, debounce, ListaPaginada, canvasABlob, descargar, compartirArchivo, nombreArchivo, abrirCapa, cerrarCapa } from './ui.js';
 
 export class QrPage {
     constructor() {
@@ -9,6 +9,8 @@ export class QrPage {
         this.resultados = [];
         this.actual = null;
         this.blob = null;
+        this.generando = 0;           // evita que una tarjeta lenta sustituya a otra más reciente
+        this.porIdExacto = false;     // la tarjeta abierta salió de escribir un ID completo
 
         this.el = {
             info: $('#qrDataInfo'),
@@ -54,22 +56,24 @@ export class QrPage {
             const it = this.activos[+this.el.todos.value];
             if (this.el.todos.value !== '' && it) this.generar(it);
         });
-        $('#qrBack').addEventListener('click', () => this.volver());
+        $('#qrBack').addEventListener('click', () => cerrarCapa());
         $('#qrDownload').addEventListener('click', () => this.descargar());
         $('#qrShare').addEventListener('click', () => this.compartir());
     }
 
     async cargar() {
         try {
-            const { items } = await cargarActivos();
+            const { items, copiaGuardada } = await cargarActivos();
             this.activos = items;
-            this.el.info.textContent = `${items.length.toLocaleString('es-ES')} activos`;
+            this.el.info.textContent = `${items.length.toLocaleString('es-ES')} activos`
+                + (copiaGuardada ? ' · sin conexión (copia guardada)' : '');
             this.rellenarDesplegable();
             this.buscar();
             this.abrirDesdeEnlace();
         } catch (e) {
             console.error(e);
             this.el.info.textContent = 'No se pudieron cargar los activos';
+            this.el.todos.hidden = true;
             this.el.count.innerHTML = `<span class="error">⚠️ ${escapeHtml(e.message)}</span>
                 <button class="btn-chip" onclick="location.reload()">Reintentar</button>`;
         }
@@ -105,15 +109,20 @@ export class QrPage {
         // Si lo escrito es un ID completo, genera la tarjeta sin tener que tocarla.
         // (Si el ID está repetido en el Excel, se deja elegir de la lista.)
         const exactos = this.activos.filter(it => it.id === q);
-        if (exactos.length === 1) this.generar(exactos[0]);
+        if (exactos.length === 1) this.generar(exactos[0], true);
     }
 
-    async generar(it) {
-        this.actual = it;
+    async generar(it, porIdExacto = false) {
+        const turno = ++this.generando;
         try {
             const canvas = await dibujarTarjeta(it);
-            this.blob = await canvasABlob(canvas);
-            this.el.img.src = canvas.toDataURL('image/png');
+            const blob = await canvasABlob(canvas);
+            if (turno !== this.generando) return;
+            this.actual = it;
+            this.blob = blob;
+            this.porIdExacto = porIdExacto;
+            this.el.img.src = URL.createObjectURL(blob);
+            if (this.el.cardView.hidden) abrirCapa(() => this.cerrarTarjeta());
             this.el.searchView.hidden = true;
             this.el.cardView.hidden = false;
             this.el.search.blur();
@@ -124,8 +133,16 @@ export class QrPage {
         }
     }
 
-    volver() {
+    /** Vuelve a la búsqueda (con el botón o con «atrás» del móvil). */
+    cerrarTarjeta() {
+        URL.revokeObjectURL(this.el.img.src);
         this.el.todos.value = '';
+        // Tras una tarjeta generada escribiendo el ID, el buscador queda listo para el siguiente.
+        if (this.porIdExacto) {
+            this.el.search.value = '';
+            this.el.clear.hidden = true;
+            this.buscar();
+        }
         this.el.cardView.hidden = true;
         this.el.searchView.hidden = false;
     }

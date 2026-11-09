@@ -127,11 +127,8 @@ export function dibujarListado(items, { titulo, subtitulo, max = 150 }) {
     ctx.fillRect(12, y, W - 24, 30);
     ctx.fillStyle = '#fff';
     ctx.font = `bold 13px ${FUENTE}`;
-    for (const c of cols) {
-        ctx.textAlign = c.right ? 'right' : c.center ? 'center' : 'left';
-        const x = c.right ? c.x + c.w : c.center ? c.x + c.w / 2 : c.x;
-        ctx.fillText(c.t, x, y + 15);
-    }
+    ctx.textAlign = 'left';
+    for (const c of cols) ctx.fillText(c.t, c.x, y + 15);
     y += 34;
 
     filas.forEach((it, i) => {
@@ -143,9 +140,7 @@ export function dibujarListado(items, { titulo, subtitulo, max = 150 }) {
             const valor = c.v(it) || '—';
             ctx.font = `${c.bold ? 'bold ' : ''}13px ${c.mono ? MONO : FUENTE}`;
             ctx.fillStyle = '#222';
-            ctx.textAlign = c.right ? 'right' : c.center ? 'center' : 'left';
-            const x = c.right ? c.x + c.w : c.center ? c.x + c.w / 2 : c.x;
-            ctx.fillText(recortar(ctx, valor, c.w), x, y + altoFila / 2);
+            ctx.fillText(recortar(ctx, valor, c.w), c.x, y + altoFila / 2);
         }
         y += altoFila;
     });
