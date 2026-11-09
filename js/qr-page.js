@@ -16,6 +16,7 @@ export class QrPage {
             clear: $('#qrSearchClear'),
             count: $('#qrCount'),
             list: $('#qrList'),
+            todos: $('#qrAll'),
             searchView: $('#qrSearchView'),
             cardView: $('#qrCardView'),
             img: $('#qrCardImg'),
@@ -49,6 +50,10 @@ export class QrPage {
             const btn = e.target.closest('[data-i]');
             if (btn) this.generar(this.resultados[+btn.dataset.i]);
         });
+        this.el.todos.addEventListener('change', () => {
+            const it = this.activos[+this.el.todos.value];
+            if (this.el.todos.value !== '' && it) this.generar(it);
+        });
         $('#qrBack').addEventListener('click', () => this.volver());
         $('#qrDownload').addEventListener('click', () => this.descargar());
         $('#qrShare').addEventListener('click', () => this.compartir());
@@ -59,6 +64,7 @@ export class QrPage {
             const { items } = await cargarActivos();
             this.activos = items;
             this.el.info.textContent = `${items.length.toLocaleString('es-ES')} activos`;
+            this.rellenarDesplegable();
             this.buscar();
             this.abrirDesdeEnlace();
         } catch (e) {
@@ -67,6 +73,15 @@ export class QrPage {
             this.el.count.innerHTML = `<span class="error">⚠️ ${escapeHtml(e.message)}</span>
                 <button class="btn-chip" onclick="location.reload()">Reintentar</button>`;
         }
+    }
+
+    /** Desplegable con todos los activos, para elegir sin escribir. */
+    rellenarDesplegable() {
+        const corto = t => (t.length > 45 ? `${t.slice(0, 44)}…` : t);
+        this.el.todos.innerHTML = `<option value="">📋 O elige de la lista completa (${this.activos.length.toLocaleString('es-ES')})</option>`
+            + this.activos.map((it, i) =>
+                `<option value="${i}">${escapeHtml(`${it.codigo} · ${it.id} — ${corto(it.desc)}`)}</option>`).join('');
+        this.el.todos.disabled = false;
     }
 
     /** Permite abrir la app con ?activo=162514 (por ejemplo, desde un enlace compartido). */
@@ -84,6 +99,8 @@ export class QrPage {
             ? (this.resultados.length ? `${this.resultados.length} resultado${this.resultados.length === 1 ? '' : 's'}` : 'Sin resultados')
             : 'Escribe un ID, código o descripción para buscar';
         this.lista.mostrar(this.resultados);
+        // El desplegable solo se muestra mientras no se ha escrito nada.
+        this.el.todos.hidden = !!q;
     }
 
     async generar(it) {
@@ -103,6 +120,7 @@ export class QrPage {
     }
 
     volver() {
+        this.el.todos.value = '';
         this.el.cardView.hidden = true;
         this.el.searchView.hidden = false;
     }

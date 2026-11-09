@@ -145,6 +145,11 @@ body.has-export-bar .page#stockPage { padding-bottom: calc(var(--tabbar) + var(-
     background: var(--tarjeta); font-size: 0.85rem;
 }
 
+.all-select {
+    width: 100%; padding: 12px; border: 2px solid var(--borde); border-radius: var(--radio);
+    background: var(--tarjeta); font-size: 0.95rem; color: var(--texto);
+}
+.all-select:focus { outline: none; border-color: var(--amarillo); box-shadow: 0 0 0 3px rgba(242, 194, 0, 0.25); }
 .result-count { font-size: 0.85rem; color: var(--texto-2); margin: 12px 2px 8px; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .error { color: var(--rojo); }

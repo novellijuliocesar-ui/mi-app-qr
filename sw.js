@@ -3,7 +3,7 @@
 // - Excel: siempre se intenta descargar el más reciente; sin conexión se usa la última copia guardada.
 // Al cambiar cualquier archivo de la app, sube VERSION para que los móviles reciban la actualización.
 
-const VERSION = 'v7';
+const VERSION = 'v8';
 const CACHE_APP = `qr-stock-app-${VERSION}`;
 const CACHE_DATOS = 'qr-stock-datos';
 
