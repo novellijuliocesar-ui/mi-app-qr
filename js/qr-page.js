@@ -101,6 +101,11 @@ export class QrPage {
         this.lista.mostrar(this.resultados);
         // El desplegable solo se muestra mientras no se ha escrito nada.
         this.el.todos.hidden = !!q;
+
+        // Si lo escrito es un ID completo, genera la tarjeta sin tener que tocarla.
+        // (Si el ID está repetido en el Excel, se deja elegir de la lista.)
+        const exactos = this.activos.filter(it => it.id === q);
+        if (exactos.length === 1) this.generar(exactos[0]);
     }
 
     async generar(it) {
