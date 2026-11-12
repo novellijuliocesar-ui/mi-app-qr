@@ -4,7 +4,7 @@
 // - Excel: se intenta descargar el más reciente; si no hay red o tarda más de unos segundos,
 //   se usa la última copia guardada (la app avisa con "copia guardada").
 
-const VERSION = 'v11';
+const VERSION = 'v12';
 const CACHE_APP = `qr-stock-app-${VERSION}`;
 const CACHE_DATOS = 'qr-stock-datos';
 const ESPERA_EXCEL_MS = 4000;
@@ -17,6 +17,7 @@ const APP = [
     './js/main.js',
     './js/ui.js',
     './js/data.js',
+    './js/sinonimos.js',
     './js/render.js',
     './js/qr-page.js',
     './js/stock-page.js',

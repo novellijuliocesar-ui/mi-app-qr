@@ -1,5 +1,6 @@
 // Carga y lectura de los dos Excel, y motor de búsqueda.
 import { normalizar } from './ui.js';
+import { SINONIMOS } from './sinonimos.js';
 
 export const ARCHIVOS = {
     activos: './data/DOC-20251215-WA0003.xlsx',
@@ -103,11 +104,28 @@ export async function cargarStock() {
 
 // ---------- Búsqueda ----------
 
+// Cada palabra con sinónimos apunta a su grupo completo (p. ej. conveyor → transportador, conv…).
+const GRUPOS = new Map();
+for (const grupo of SINONIMOS) {
+    const palabras = grupo.map(normalizar);
+    for (const p of palabras) GRUPOS.set(p, palabras);
+}
+
+/** Añade al texto de búsqueda los sinónimos de las palabras que contiene. */
+function conSinonimos(texto) {
+    const extra = new Set();
+    for (const palabra of texto.split(' ')) {
+        for (const s of GRUPOS.get(palabra) || []) if (s !== palabra) extra.add(s);
+    }
+    return extra.size ? `${texto} ${[...extra].join(' ')}` : texto;
+}
+
 /** Precalcula el texto normalizado de cada registro para que buscar sea instantáneo. */
 function indexar(items, campos) {
     for (const it of items) {
         const valores = campos(it);
-        Object.defineProperty(it, '_texto', { value: ` ${valores.map(normalizar).join(' ')} ` });
+        const texto = conSinonimos(valores.map(normalizar).join(' '));
+        Object.defineProperty(it, '_texto', { value: ` ${texto} ` });
         Object.defineProperty(it, '_claves', { value: valores.slice(0, 2).map(v => normalizar(v)) });
     }
     return items;
