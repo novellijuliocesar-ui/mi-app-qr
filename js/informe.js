@@ -2,14 +2,11 @@
 // (o cualquier app del menú de compartir). El borrador se guarda en el móvil mientras
 // se escribe y se borra al enviarlo.
 //
-// Se envía en un solo paso:
-// - Sin fotos: la imagen del QR del activo con el informe como pie.
-// - Con fotos: un PDF (QR + informe + fotos) con el informe como pie. Así WhatsApp no
-//   repite el texto en cada foto, que es lo que hace si se envían varias imágenes juntas.
+// Se envía en un solo paso como PDF (QR del activo + informe + fotos), con el informe
+// también como pie del mensaje para leerlo sin abrir el PDF.
 import { buscar } from './data.js';
 import { generarPdf, precargarPdf } from './informe-pdf.js';
-import { dibujarTarjeta } from './render.js';
-import { $, toast, escapeHtml, debounce, abrirCapa, cerrarCapa, canvasABlob } from './ui.js';
+import { $, toast, escapeHtml, debounce, abrirCapa, cerrarCapa } from './ui.js';
 
 const TURNO_MS = 8 * 60 * 60 * 1000;   // el nombre del técnico se recuerda durante un turno
 const MAX_LADO_FOTO = 1600;             // las fotos se reducen para que se envíen rápido
@@ -99,7 +96,6 @@ export class Informe {
             fotoInput: $('#repFotoInput'),
             camara: $('#repCamara'),
             enviar: $('#repEnviar'),
-            pasos: $('#repPasos'),
             tecnico: $('#repTecnico'),
         };
 
@@ -151,7 +147,6 @@ export class Informe {
                 input.value = '';
                 if (!archivos.length) return;
                 toast(`Preparando ${archivos.length} foto${archivos.length === 1 ? '' : 's'}…`, 'info', 1500);
-                precargarPdf();   // con fotos se enviará un PDF: se adelanta la descarga del generador
                 for (const a of archivos) this.fotos.push(await reducirFoto(a));
                 this.pintarFotos();
                 this.guardar();
@@ -197,6 +192,7 @@ export class Informe {
         this.pintarFotos();
 
         this.el.vista.hidden = false;
+        precargarPdf();   // se adelanta la descarga del generador de PDF mientras se rellena
         abrirCapa(() => this.cerrar());
         document.getElementById('qrPage').scrollTo({ top: 0 });
         if (b) toast('Borrador recuperado', 'info', 1800);
@@ -256,12 +252,6 @@ export class Informe {
         this.el.fotos.innerHTML = this.urlsFotos.map((u, i) => `
             <div class="photo"><img src="${u}" alt="Foto ${i + 1}">
                 <button type="button" data-quitar="${i}" aria-label="Quitar foto">✕</button></div>`).join('');
-        this.pintarEnvio();
-    }
-
-    /** Con fotos, avisa de que se enviará un PDF. */
-    pintarEnvio() {
-        this.el.pasos.hidden = !this.fotos.length;
     }
 
     limpiarUrlsFotos() {
@@ -302,7 +292,7 @@ export class Informe {
             d.repuestos.forEach(r => l.push(`- ${r.referencia} · ${r.descripcion} · Ubic. ${r.ubicacion}`));
         }
         l.push('', `Técnico: ${d.tecnico} · ${d.fecha}`);
-        if (d.fotos.length) l.push(`Fotos: ${d.fotos.length} (en el PDF adjunto)`);
+        if (d.fotos.length) l.push(`Fotos: ${d.fotos.length} (en el PDF)`);
         if (this.estado === 'pend') {
             // Enlace que abre directamente el QR de este activo en la app del relevo.
             const url = new URL(location.pathname, location.origin);
@@ -333,29 +323,25 @@ export class Informe {
         const base = `${this.activo.codigo}-${new Date().toISOString().slice(0, 10)}`.replace(/[^\w.\-]+/g, '_');
         this.enviando = true;
         this.el.enviar.disabled = true;
-        let archivo = null;
+        let archivo;
         try {
-            if (d.fotos.length) {
-                toast('Preparando el PDF…', 'info', 2000);
-                archivo = new File([await generarPdf(d)], `Informe-${base}.pdf`, { type: 'application/pdf' });
-            } else {
-                archivo = new File([await canvasABlob(await dibujarTarjeta(this.activo))],
-                    `QR-${base}.png`, { type: 'image/png' });
-            }
+            toast('Preparando el PDF…', 'info', 2000);
+            archivo = new File([await generarPdf(d)], `Informe-${base}.pdf`, { type: 'application/pdf' });
         } catch (e) {
             console.error(e);
-            if (d.fotos.length) {
-                toast(e.message, 'error', 4000);
-                this.liberarBoton();
-                return;
-            }
+            toast(e.message, 'error', 4000);
+            this.liberarBoton();
+            return;
         }
         // Por si la app de destino no recoge el pie: el texto queda copiado para pegarlo.
         try { await navigator.clipboard.writeText(texto); } catch { /* sin permiso: no pasa nada */ }
 
-        const datos = archivo && navigator.canShare?.({ files: [archivo] })
-            ? { files: [archivo], text: texto }
-            : { text: texto };
+        if (!navigator.canShare?.({ files: [archivo] })) {
+            toast('Este móvil no permite compartir archivos desde la app', 'error', 4000);
+            this.liberarBoton();
+            return;
+        }
+        const datos = { files: [archivo], text: texto };
         const enviado = await this.compartir(datos);
         this.liberarBoton();
         if (enviado === 'tarde') {

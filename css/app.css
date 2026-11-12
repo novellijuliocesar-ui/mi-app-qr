@@ -237,7 +237,7 @@ body.has-export-bar .page#stockPage { padding-bottom: calc(var(--tabbar) + var(-
 .actions { display: grid; gap: 8px; }
 @media (min-width: 520px) {
     .actions { grid-template-columns: 1fr 1fr; }
-    .actions .btn-ghost { grid-column: span 2; margin-top: 0; }
+    .actions .btn-ghost, .actions .btn-report { grid-column: span 2; margin-top: 0; }
 }
 
 /* ================= Barra de exportación ================= */
