@@ -350,7 +350,9 @@ body:not([data-page="1"]) .export-bar { display: none; }
 
 .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .photos:not(:empty) { margin-bottom: 8px; }
-.photo { position: relative; aspect-ratio: 1; }
+.photo { position: relative; aspect-ratio: 1; min-width: 0; overflow: hidden; border-radius: 10px; }
 .photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
 .photo button { position: absolute; top: 4px; right: 4px; background: rgba(0, 0, 0, 0.6); color: #fff; }
 .btn-photo { margin-top: 0; }
+.photo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-whatsapp.paso2 { background: var(--oscuro); color: var(--sobre-oscuro); }

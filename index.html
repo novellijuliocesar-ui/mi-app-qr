@@ -95,13 +95,18 @@
 
                     <p class="field-label">Fotos <span class="opt">(opcional)</span></p>
                     <div class="photos" id="repFotos"></div>
-                    <label class="btn btn-ghost btn-photo" for="repFotoInput">📷 Añadir fotos</label>
+                    <div class="photo-btns">
+                        <label class="btn btn-ghost btn-photo" for="repCamara">📷 Hacer foto</label>
+                        <label class="btn btn-ghost btn-photo" for="repFotoInput">🖼️ Galería</label>
+                    </div>
+                    <input type="file" id="repCamara" accept="image/*" capture="environment" hidden>
                     <input type="file" id="repFotoInput" accept="image/*" multiple hidden>
 
                     <label class="field-label" for="repTecnico">Técnico</label>
                     <input id="repTecnico" class="text-input" placeholder="Tu nombre" autocomplete="off" enterkeyhint="done">
 
                     <button type="button" class="btn btn-whatsapp" id="repEnviar">📤 Enviar por WhatsApp</button>
+                    <p class="hint-small" id="repPasos" hidden></p>
                     <button type="button" class="btn btn-ghost" id="repDescartar">🗑 Descartar informe</button>
                     <p class="hint-small">El borrador se guarda solo en este móvil y se borra al enviarlo.</p>
                 </form>
