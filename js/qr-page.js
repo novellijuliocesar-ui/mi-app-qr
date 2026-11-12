@@ -58,6 +58,7 @@ export class QrPage {
         });
         $('#qrBack').addEventListener('click', () => cerrarCapa());
         $('#qrDownload').addEventListener('click', () => this.descargar());
+        $('#qrReport').addEventListener('click', () => this.abrirInforme());
         $('#qrShare').addEventListener('click', () => this.compartir());
     }
 
@@ -145,6 +146,19 @@ export class QrPage {
         }
         this.el.cardView.hidden = true;
         this.el.searchView.hidden = false;
+    }
+
+    /** Abre el informe de trabajo del activo de la tarjeta (ver informe.js). */
+    abrirInforme() {
+        if (!this.informe || !this.actual) return;
+        this.el.cardView.hidden = true;
+        this.informe.abrir(this.actual);
+    }
+
+    /** Al cerrar el informe se vuelve a la tarjeta. */
+    volverDeInforme() {
+        this.el.cardView.hidden = false;
+        document.getElementById('qrPage').scrollTo({ top: 0 });
     }
 
     get nombre() {

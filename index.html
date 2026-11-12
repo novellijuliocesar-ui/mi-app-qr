@@ -52,11 +52,59 @@
                         <img id="qrCardImg" alt="Tarjeta QR generada">
                     </div>
                     <div class="actions">
+                        <button class="btn btn-report" id="qrReport">📝 Hacer informe</button>
                         <button class="btn btn-primary" id="qrShare">📤 Compartir</button>
                         <button class="btn btn-dark" id="qrDownload">📥 Descargar</button>
                         <button class="btn btn-ghost" id="qrBack">← Volver a la búsqueda</button>
                     </div>
                 </div>
+
+                <!-- Informe de trabajo -->
+                <form id="reportView" class="report" hidden novalidate>
+                    <div class="report-asset">
+                        <div class="item-top"><b class="mono" id="repCodigo"></b><span class="badge" id="repId"></span></div>
+                        <p class="item-desc" id="repDesc"></p>
+                    </div>
+
+                    <p class="field-label">Estado del trabajo</p>
+                    <div class="seg" id="repEstado" role="radiogroup" aria-label="Estado del trabajo">
+                        <button type="button" data-v="fin" role="radio" aria-checked="false">✅ Finalizado</button>
+                        <button type="button" data-v="pend" role="radio" aria-checked="false">⏳ Pendiente relevo</button>
+                    </div>
+
+                    <p class="field-label">Tipo <span class="opt">(opcional)</span></p>
+                    <div class="seg seg-small" id="repTipo" role="radiogroup" aria-label="Tipo de trabajo">
+                        <button type="button" data-v="Correctivo" role="radio" aria-checked="false">Correctivo</button>
+                        <button type="button" data-v="Preventivo" role="radio" aria-checked="false">Preventivo</button>
+                        <button type="button" data-v="Anomalía" role="radio" aria-checked="false">Anomalía</button>
+                    </div>
+
+                    <label class="field-label" for="repHecho">Trabajo realizado</label>
+                    <textarea id="repHecho" rows="4" placeholder="¿Qué se ha hecho? Puedes dictarlo con el 🎤 del teclado"></textarea>
+
+                    <div id="repPendBox" hidden>
+                        <label class="field-label" for="repPend">¿Qué queda pendiente?</label>
+                        <textarea id="repPend" rows="3" placeholder="Lo que debe hacer el relevo"></textarea>
+                    </div>
+
+                    <p class="field-label">Repuestos usados <span class="opt">(opcional)</span></p>
+                    <ul class="rep-chips" id="repRepuestos"></ul>
+                    <input type="search" id="repBuscarRep" class="text-input" placeholder="🔍 Buscar repuesto para añadirlo…"
+                           autocomplete="off" enterkeyhint="search" aria-label="Buscar repuesto">
+                    <ul class="mini-list" id="repRepLista"></ul>
+
+                    <p class="field-label">Fotos <span class="opt">(opcional)</span></p>
+                    <div class="photos" id="repFotos"></div>
+                    <label class="btn btn-ghost btn-photo" for="repFotoInput">📷 Añadir fotos</label>
+                    <input type="file" id="repFotoInput" accept="image/*" multiple hidden>
+
+                    <label class="field-label" for="repTecnico">Técnico</label>
+                    <input id="repTecnico" class="text-input" placeholder="Tu nombre" autocomplete="off" enterkeyhint="done">
+
+                    <button type="button" class="btn btn-whatsapp" id="repEnviar">📤 Enviar por WhatsApp</button>
+                    <button type="button" class="btn btn-ghost" id="repDescartar">🗑 Descartar informe</button>
+                    <p class="hint-small">El borrador se guarda solo en este móvil y se borra al enviarlo.</p>
+                </form>
             </div>
         </section>
 

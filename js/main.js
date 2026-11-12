@@ -1,6 +1,7 @@
 // Punto de entrada: navegación entre páginas, carga de datos y modo sin conexión.
 import { QrPage } from './qr-page.js';
 import { StockPage } from './stock-page.js';
+import { Informe } from './informe.js';
 import { $ } from './ui.js';
 
 const pages = $('#pages');
@@ -50,6 +51,7 @@ document.querySelectorAll('.theme-btn').forEach(btn => btn.addEventListener('cli
 // ---------- Datos ----------
 const qr = new QrPage();
 const stock = new StockPage();
+qr.informe = new Informe({ stockItems: () => stock.items, alCerrar: () => qr.volverDeInforme() });
 qr.cargar();
 stock.cargar();
 
