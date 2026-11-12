@@ -71,7 +71,15 @@ botón «atrás» del móvil que cierra tarjeta/selección/informe, y accesos di
 3. Antes de dar algo por hecho, **probarlo de verdad** en un navegador simulado (Playwright con
    Chromium preinstalado, móvil «Pixel 7») y revisar las capturas.
 4. Tras cada commit en la rama de revisión, subirla (`git push origin refactor-completo`).
-5. Al ofrecer nuevas ideas, dar una recomendación concreta en lugar de una lista larga.
+5. **Cada vez que se pase algo a `main`, actualizar este `CLAUDE.md` en ese mismo cambio** (petición
+   expresa del usuario). Revisar y poner al día, según corresponda:
+   - «Qué hace la app» y «Decisiones ya tomadas» (nuevas decisiones o cambios de criterio).
+   - «Estructura del código» (archivos nuevos, renombrados o eliminados) y las librerías.
+   - La versión de `sw.js` mencionada en «Detalles técnicos» (hoy `v16`).
+   - «Ideas pendientes»: quitar las que ya se hicieron y añadir las nuevas.
+   - «Historial breve»: una línea por cada cambio publicado.
+   Decirle al usuario en el resumen final qué se ha actualizado en `CLAUDE.md`.
+6. Al ofrecer nuevas ideas, dar una recomendación concreta en lugar de una lista larga.
 
 ## Estructura del código
 
