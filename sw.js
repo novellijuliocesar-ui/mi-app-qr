@@ -4,7 +4,7 @@
 // - Excel: se intenta descargar el más reciente; si no hay red o tarda más de unos segundos,
 //   se usa la última copia guardada (la app avisa con "copia guardada").
 
-const VERSION = 'v14';
+const VERSION = 'v15';
 const CACHE_APP = `qr-stock-app-${VERSION}`;
 const CACHE_DATOS = 'qr-stock-datos';
 const ESPERA_EXCEL_MS = 4000;
@@ -22,12 +22,14 @@ const APP = [
     './js/qr-page.js',
     './js/stock-page.js',
     './js/informe.js',
+    './js/informe-pdf.js',
     './icons/icon-192.png',
     './icons/icon-512.png',
 ];
 const LIBRERIAS = [
     'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.mini.min.js',
     'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
 ];
 
 self.addEventListener('install', event => {

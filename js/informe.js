@@ -2,10 +2,12 @@
 // (o cualquier app del menú de compartir). El borrador se guarda en el móvil mientras
 // se escribe y se borra al enviarlo.
 //
-// Orden en el chat: 1) imagen del QR con el informe como pie, 2) las fotos sin texto.
-// WhatsApp pone el texto como pie de TODAS las imágenes si se envían juntas, así que
-// con fotos se envía en dos pasos.
+// Se envía en un solo paso:
+// - Sin fotos: la imagen del QR del activo con el informe como pie.
+// - Con fotos: un PDF (QR + informe + fotos) con el informe como pie. Así WhatsApp no
+//   repite el texto en cada foto, que es lo que hace si se envían varias imágenes juntas.
 import { buscar } from './data.js';
+import { generarPdf, precargarPdf } from './informe-pdf.js';
 import { dibujarTarjeta } from './render.js';
 import { $, toast, escapeHtml, debounce, abrirCapa, cerrarCapa, canvasABlob } from './ui.js';
 
@@ -78,7 +80,7 @@ export class Informe {
         this.repuestos = [];   // { referencia, descripcion, ubicacion }
         this.fotos = [];       // Blobs JPEG
         this.urlsFotos = [];
-        this.faltanFotos = false;   // paso 1 enviado; queda enviar las fotos
+        this.enviando = false;
 
         this.el = {
             vista: $('#reportView'),
@@ -149,6 +151,7 @@ export class Informe {
                 input.value = '';
                 if (!archivos.length) return;
                 toast(`Preparando ${archivos.length} foto${archivos.length === 1 ? '' : 's'}…`, 'info', 1500);
+                precargarPdf();   // con fotos se enviará un PDF: se adelanta la descarga del generador
                 for (const a of archivos) this.fotos.push(await reducirFoto(a));
                 this.pintarFotos();
                 this.guardar();
@@ -187,7 +190,8 @@ export class Informe {
         this.fotos = b?.fotos || [];
         this.el.buscarRep.value = '';
         this.el.listaRep.innerHTML = '';
-        this.faltanFotos = false;
+        this.preparado = null;
+        this.el.enviar.textContent = '📤 Enviar por WhatsApp';
         this.pintarBotones();
         this.pintarRepuestos();
         this.pintarFotos();
@@ -255,20 +259,9 @@ export class Informe {
         this.pintarEnvio();
     }
 
-    /** Texto del botón de envío según haya fotos y en qué paso se esté. */
+    /** Con fotos, avisa de que se enviará un PDF. */
     pintarEnvio() {
-        const n = this.fotos.length;
-        if (this.faltanFotos && n) {
-            this.el.enviar.textContent = `📷 Paso 2 de 2: enviar ${n === 1 ? 'la foto' : `las ${n} fotos`}`;
-            this.el.enviar.classList.add('paso2');
-            this.el.pasos.textContent = 'Elige el mismo chat. Las fotos van sin texto, debajo del informe.';
-        } else {
-            this.faltanFotos = false;
-            this.el.enviar.textContent = n ? '📤 Paso 1 de 2: enviar QR e informe' : '📤 Enviar por WhatsApp';
-            this.el.enviar.classList.remove('paso2');
-            this.el.pasos.textContent = 'Primero se envía el QR con el informe y después las fotos.';
-        }
-        this.el.pasos.hidden = !n;
+        this.el.pasos.hidden = !this.fotos.length;
     }
 
     limpiarUrlsFotos() {
@@ -276,42 +269,58 @@ export class Informe {
         this.urlsFotos = [];
     }
 
-    /** Texto del mensaje, con el formato de WhatsApp (*negrita*). */
-    componerTexto() {
-        const a = this.activo;
-        const ahora = new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
-        const l = [];
-        l.push('📝 *INFORME DE TRABAJO*');
-        l.push(this.estado === 'fin' ? '✅ *FINALIZADO*' : '⏳ *PENDIENTE PARA EL RELEVO*');
-        if (this.tipo) l.push(`🔧 ${this.tipo}`);
-        l.push('');
-        l.push(`🏭 *${a.codigo}* (ID ${a.id})`);
-        l.push(a.desc);
-        l.push(`👷 ${this.el.tecnico.value.trim()} · ${ahora}`);
-        if (this.el.hecho.value.trim()) {
-            l.push('', '*Trabajo realizado:*', this.el.hecho.value.trim());
+    /** Datos del informe, comunes al mensaje y al PDF. */
+    datos() {
+        const pend = this.estado === 'pend';
+        return {
+            tipo: this.tipo,
+            estadoTexto: pend ? 'Pendiente para el relevo' : 'Finalizado',
+            hecho: this.el.hecho.value.trim(),
+            pendiente: pend ? this.el.pend.value.trim() : '',
+            activo: this.activo,
+            repuestos: this.repuestos,
+            tecnico: this.el.tecnico.value.trim(),
+            fecha: new Date().toLocaleString('es-ES', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+            }),
+            fotos: this.fotos,
+        };
+    }
+
+    /**
+     * Mensaje para WhatsApp: limpio, sin iconos, en este orden:
+     * trabajo realizado → estado → activo → repuestos. (*texto* = negrita en WhatsApp)
+     */
+    componerTexto(d = this.datos()) {
+        const l = [`*INFORME DE TRABAJO${d.tipo ? ` – ${d.tipo.toUpperCase()}` : ''}*`, ''];
+        if (d.hecho) l.push('*Trabajo realizado*', d.hecho, '');
+        l.push(`*Estado:* ${d.estadoTexto}`);
+        if (d.pendiente) l.push('', '*Queda pendiente*', d.pendiente);
+        l.push('', `*Activo:* ${d.activo.codigo} (ID ${d.activo.id})`, d.activo.desc);
+        if (d.repuestos.length) {
+            l.push('', '*Repuestos usados*');
+            d.repuestos.forEach(r => l.push(`- ${r.referencia} · ${r.descripcion} · Ubic. ${r.ubicacion}`));
         }
-        if (this.estado === 'pend' && this.el.pend.value.trim()) {
-            l.push('', '*Pendiente:*', this.el.pend.value.trim());
-        }
-        if (this.repuestos.length) {
-            l.push('', '*Repuestos usados:*');
-            this.repuestos.forEach(r => l.push(`• ${r.referencia} — ${r.descripcion} (📍 ${r.ubicacion})`));
-        }
-        if (this.fotos.length) l.push('', `📷 ${this.fotos.length} foto${this.fotos.length === 1 ? '' : 's'} a continuación`);
+        l.push('', `Técnico: ${d.tecnico} · ${d.fecha}`);
+        if (d.fotos.length) l.push(`Fotos: ${d.fotos.length} (en el PDF adjunto)`);
         if (this.estado === 'pend') {
             // Enlace que abre directamente el QR de este activo en la app del relevo.
             const url = new URL(location.pathname, location.origin);
-            url.searchParams.set('activo', a.id);
-            l.push('', `🔗 QR para cerrar el trabajo: ${url}`);
+            url.searchParams.set('activo', d.activo.id);
+            l.push(`QR para cerrar el trabajo: ${url}`);
         }
         return l.join('\n');
     }
 
-    /** Comprueba lo mínimo y abre el menú de compartir del móvil (en uno o dos pasos). */
+    /** Comprueba lo mínimo y lo envía todo de una vez por el menú de compartir. */
     async enviar() {
-        if (this.faltanFotos) return this.enviarFotos();
-
+        if (this.enviando) return;
+        // Si el archivo ya quedó preparado (el móvil no dejó compartir por tardar), se envía ya.
+        if (this.preparado) {
+            const enviado = await this.compartir(this.preparado);
+            if (enviado) await this.terminar('Informe enviado');
+            return;
+        }
         if (!this.estado) return this.aviso('Indica si el trabajo está finalizado o pendiente', this.el.estado);
         if (!this.el.hecho.value.trim() && !this.el.pend.value.trim()) {
             return this.aviso('Escribe qué se ha hecho', this.el.hecho);
@@ -319,42 +328,49 @@ export class Informe {
         if (!this.el.tecnico.value.trim()) return this.aviso('Escribe tu nombre', this.el.tecnico);
         recordarNombre(this.el.tecnico.value.trim());
 
-        // Paso 1: imagen del QR del activo con el informe como pie.
-        const texto = this.componerTexto();
-        let qr;
+        const d = this.datos();
+        const texto = this.componerTexto(d);
+        const base = `${this.activo.codigo}-${new Date().toISOString().slice(0, 10)}`.replace(/[^\w.\-]+/g, '_');
+        this.enviando = true;
+        this.el.enviar.disabled = true;
+        let archivo = null;
         try {
-            qr = new File([await canvasABlob(await dibujarTarjeta(this.activo))],
-                `QR-${this.activo.codigo}.png`.replace(/[^\w.\-]+/g, '_'), { type: 'image/png' });
+            if (d.fotos.length) {
+                toast('Preparando el PDF…', 'info', 2000);
+                archivo = new File([await generarPdf(d)], `Informe-${base}.pdf`, { type: 'application/pdf' });
+            } else {
+                archivo = new File([await canvasABlob(await dibujarTarjeta(this.activo))],
+                    `QR-${base}.png`, { type: 'image/png' });
+            }
         } catch (e) {
             console.error(e);
+            if (d.fotos.length) {
+                toast(e.message, 'error', 4000);
+                this.liberarBoton();
+                return;
+            }
         }
-        // Por si la app de destino no recoge el pie de foto: el texto queda copiado para pegarlo.
+        // Por si la app de destino no recoge el pie: el texto queda copiado para pegarlo.
         try { await navigator.clipboard.writeText(texto); } catch { /* sin permiso: no pasa nada */ }
 
-        const enviado = await this.compartir(qr && navigator.canShare?.({ files: [qr] })
-            ? { files: [qr], text: texto }
-            : { text: texto });
-        if (!enviado) return;
-
-        if (this.fotos.length) {
-            this.faltanFotos = true;
-            this.pintarEnvio();
-            this.el.enviar.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            toast('Informe enviado. Ahora envía las fotos al mismo chat.', 'success', 4000);
-            return;
+        const datos = archivo && navigator.canShare?.({ files: [archivo] })
+            ? { files: [archivo], text: texto }
+            : { text: texto };
+        const enviado = await this.compartir(datos);
+        this.liberarBoton();
+        if (enviado === 'tarde') {
+            // Android solo deja compartir justo después de tocar: queda listo para un toque más.
+            this.preparado = datos;
+            this.el.enviar.textContent = '📤 Listo: enviar ahora';
+            toast('El informe está listo. Toca «Enviar ahora».', 'info', 3500);
+        } else if (enviado) {
+            await this.terminar('Informe enviado');
         }
-        await this.terminar('Informe enviado');
     }
 
-    /** Paso 2: las fotos, sin texto, para que no se repita el informe en cada una. */
-    async enviarFotos() {
-        const archivos = this.fotos.map((f, i) =>
-            new File([f], `${this.activo.codigo}-foto${i + 1}.jpg`.replace(/[^\w.\-]+/g, '_'), { type: 'image/jpeg' }));
-        if (!navigator.canShare?.({ files: archivos })) {
-            toast('Este móvil no permite compartir fotos desde la app', 'error', 4000);
-            return;
-        }
-        if (await this.compartir({ files: archivos })) await this.terminar('Informe y fotos enviados');
+    liberarBoton() {
+        this.enviando = false;
+        this.el.enviar.disabled = false;
     }
 
     /** Abre el menú de compartir. Devuelve false si se canceló o falló. */
@@ -364,6 +380,7 @@ export class Informe {
             else window.open(`https://wa.me/?text=${encodeURIComponent(datos.text || '')}`, '_blank');
             return true;
         } catch (e) {
+            if (e.name === 'NotAllowedError') return 'tarde';
             if (e.name !== 'AbortError') {
                 console.error(e);
                 toast('No se pudo abrir el menú de compartir. El texto está copiado.', 'error', 4000);
@@ -373,7 +390,7 @@ export class Informe {
     }
 
     async terminar(mensaje) {
-        this.faltanFotos = false;
+        this.preparado = null;
         await borrarBorrador(this.clave).catch(() => {});
         toast(mensaje, 'success', 3000);
         cerrarCapa();

@@ -355,4 +355,3 @@ body:not([data-page="1"]) .export-bar { display: none; }
 .photo button { position: absolute; top: 4px; right: 4px; background: rgba(0, 0, 0, 0.6); color: #fff; }
 .btn-photo { margin-top: 0; }
 .photo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.btn-whatsapp.paso2 { background: var(--oscuro); color: var(--sobre-oscuro); }

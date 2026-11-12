@@ -6,7 +6,7 @@ const OSCURO = '#1a1a2e';
 const FUENTE = '-apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 const MONO = '"SF Mono", Consolas, "Courier New", monospace';
 
-function qrCanvas(texto, ancho) {
+export function qrCanvas(texto, ancho) {
     return new Promise((resolve, reject) => {
         if (typeof QRCode === 'undefined') {
             reject(new Error('No se pudo cargar la librería de QR'));
